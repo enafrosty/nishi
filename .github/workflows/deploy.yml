@@ -65,13 +65,14 @@ jobs:
 
       - name: Compile and Package Rootless Tweak
         run: |
+          cd Tweaks/Yuna
           make clean
           make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless ARCHS="arm64 arm64e" SDKVERSION=16.5
 
       - name: Stash Built Debs
         run: |
           mkdir -p built_debs
-          find packages/ Tweaks/*/packages/ -name "*.deb" -exec cp {} built_debs/ \; 2>/dev/null || true
+          find packages/ Tweaks/*/packages/ -name "*.deb" -exec cp -vf {} built_debs/ \; 2>/dev/null || true
           ls -la built_debs/
 
       - name: Upload Tweak Deb Artifact
