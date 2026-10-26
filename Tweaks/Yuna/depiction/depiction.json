@@ -70,7 +70,7 @@
         {
           "class": "DepictionTableTextView",
           "title": "Version",
-          "text": "1.0.3"
+          "text": "1.0.4"
         },
         {
           "class": "DepictionTableTextView",
@@ -88,6 +88,17 @@
     {
       "tabname": "Changelog",
       "views": [
+        {
+          "class": "DepictionHeaderView",
+          "title": "Version 1.0.4"
+        },
+        {
+          "class": "DepictionMarkdownView",
+          "markdown": "- **Instantaneous Sileo Installation**: Removed redundant shell maintainer scripts (postinst/prerm) to eliminate dpkg subshell stalls. Installation is now clean, instantaneous, and concludes with Sileo's native Respring prompt."
+        },
+        {
+          "class": "DepictionSeparatorView"
+        },
         {
           "class": "DepictionHeaderView",
           "title": "Version 1.0.3"

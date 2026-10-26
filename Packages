@@ -72,3 +72,21 @@ SHA1: c47ec0ff86cec0e4d15e0931ad23a6fd968a490a
 SHA256: 270263b9b68a539b75dab1b179a336cb40aaad9e448b4ff8edaf83db13fc87ce
 Description: Universal clipboard button in the keyboard for text, images, and files with pinning and customizable row management.
 
+Package: com.frosty.yuna
+Name: Yuna
+Version: 1.0.4
+Architecture: iphoneos-arm64
+Maintainer: frosty
+Author: frosty
+Section: Tweaks
+Depends: mobilesubstrate (>= 0.9.5000), ellekit, preferenceloader, firmware (>= 15.0)
+Tag: purpose::extension, role::developer, compatible::ios15, compatible::ios16, cydia::respring
+SileoDepiction: https://nishi.heyfrosty.space/Tweaks/Yuna/depiction/depiction.json
+Icon: https://nishi.heyfrosty.space/Tweaks/Yuna/depiction/icon.png
+Filename: debs/com.frosty.yuna_1.0.4_iphoneos-arm64.deb
+Size: 2462
+MD5sum: 7e78d1c1cf57ab625573be621b14effd
+SHA1: 243f5bf0b225f128ef964599746b1fc350ec5d98
+SHA256: 716af1c87ec7e1ea0e2da09d59fc1cfb722859ea7f9d9470a4e061058ec33bd7
+Description: Universal clipboard button in the keyboard for text, images, and files with pinning and customizable row management.
+
