@@ -8,7 +8,7 @@ include $(THEOS)/makefiles/common.mk
 TWEAK_NAME = Yuna
 
 Yuna_FILES = $(wildcard Source/*.x Source/*.m Source/UI/*.m)
-Yuna_CFLAGS = -fobjc-arc -Wall -Wextra -Wno-unused-parameter -Iinclude -ISource/Headers
+Yuna_CFLAGS = -fobjc-arc -Wall -Wextra -Wno-unused-parameter -Iinclude -I../../include -ISource/Headers
 Yuna_FRAMEWORKS = UIKit Foundation CoreGraphics QuartzCore
 Yuna_LIBRARIES = ellekit
 

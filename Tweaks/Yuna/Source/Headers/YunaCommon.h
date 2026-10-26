@@ -3,7 +3,7 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
-#import "../../../include/rootless.h"
+#import "rootless.h"
 
 #define YUNA_BUNDLE_ID @"com.frosty.yuna"
 #define YUNA_PREFS_NOTIFICATION "com.frosty.yuna/ReloadPrefs"
