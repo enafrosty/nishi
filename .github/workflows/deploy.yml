@@ -65,6 +65,8 @@ jobs:
 
       - name: Compile and Package Rootless Tweak
         run: |
+          chmod 0755 Tweaks/Yuna/layout/DEBIAN/postinst Tweaks/Yuna/layout/DEBIAN/prerm 2>/dev/null || true
+          chmod 0644 Tweaks/Yuna/layout/DEBIAN/control 2>/dev/null || true
           cd Tweaks/Yuna
           make clean
           make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless ARCHS="arm64 arm64e" SDKVERSION=16.5
