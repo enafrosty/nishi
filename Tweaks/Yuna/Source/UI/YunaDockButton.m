@@ -12,7 +12,6 @@
 - (void)setupButton {
     self.frame = CGRectMake(0, 0, 44.0, 44.0);
     self.contentMode = UIViewContentModeCenter;
-    self.adjustsImageWhenHighlighted = YES;
     self.accessibilityLabel = @"Yuna Clipboard";
     self.accessibilityHint = @"Opens saved clipboard history";
     
