@@ -47,6 +47,9 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Install Build Prerequisites
+        run: brew install ldid dpkg
+
       - name: Setup Theos & iOS SDK
         run: |
           git clone --recursive https://github.com/theos/theos.git ~/theos
