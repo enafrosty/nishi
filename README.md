@@ -7,8 +7,8 @@
 
 **Nishi** is a personal, modern rootless iOS jailbreak tweak repository hosted on GitHub Pages. It serves tweaks engineered specifically for modern rootless jailbreaks (**Dopamine**, iOS 15.0 – 16.x+) across `arm64` and `arm64e` (A12/A13 hardware Pointer Authentication) architectures.
 
-- **Web Showcase**: [https://enafrosty.github.io/Nishi/](https://enafrosty.github.io/Nishi/)
-- **Repository URL**: `https://enafrosty.github.io/Nishi/`
+- **Web Showcase**: [https://nishi.heyfrosty.space/](https://nishi.heyfrosty.space/)
+- **Repository URL**: `https://nishi.heyfrosty.space/`
 
 ---
 
@@ -18,8 +18,8 @@ Tap one of the direct links below from Safari on your jailbroken iPhone or iPad:
 
 | Package Manager | One-Click Add Link | Manual URL |
 | :--- | :--- | :--- |
-| **Sileo** | [Add to Sileo](sileo://source/https://enafrosty.github.io/Nishi/) | `https://enafrosty.github.io/Nishi/` |
-| **Zebra** | [Add to Zebra](zbra://sources/add/https://enafrosty.github.io/Nishi/) | `https://enafrosty.github.io/Nishi/` |
+| **Sileo** | [Add to Sileo](sileo://source/https://nishi.heyfrosty.space/) | `https://nishi.heyfrosty.space/` |
+| **Zebra** | [Add to Zebra](zbra://sources/add/https://nishi.heyfrosty.space/) | `https://nishi.heyfrosty.space/` |
 
 ---
 

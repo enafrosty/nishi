@@ -296,7 +296,7 @@
     </nav>
     <div class="top__right">
       <button class="btn btn--quiet btn--sm" id="sfxBtn" title="Toggle audio effects">🔊 SFX: ON</button>
-      <a class="btn btn--sileo btn--sm js-sileo-link" id="topSileoBtn" href="sileo://source/https://enafrosty.github.io/Nishi/">
+      <a class="btn btn--sileo btn--sm js-sileo-link" id="topSileoBtn" href="sileo://source/https://nishi.heyfrosty.space/">
         <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
         Add to Sileo
       </a>
@@ -336,16 +336,16 @@
         <h3>Direct Sileo & Zebra Quick Add</h3>
         <p>Tap below to add this repository directly to your package manager, or copy the URL manually.</p>
         <div class="quick-add__url-box">
-          <input type="text" class="quick-add__url-input" id="repoUrlInput" readonly value="https://enafrosty.github.io/Nishi/">
+          <input type="text" class="quick-add__url-input" id="repoUrlInput" readonly value="https://nishi.heyfrosty.space/">
           <button class="btn btn--sm" id="copyUrlBtn">Copy</button>
         </div>
       </div>
       <div class="quick-add__actions">
-        <a class="btn btn--sileo js-sileo-link" id="mainSileoBtn" href="sileo://source/https://enafrosty.github.io/Nishi/">
+        <a class="btn btn--sileo js-sileo-link" id="mainSileoBtn" href="sileo://source/https://nishi.heyfrosty.space/">
           <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
           Add to Sileo
         </a>
-        <a class="btn btn--zebra js-zebra-link" id="mainZebraBtn" href="zbra://sources/add/https://enafrosty.github.io/Nishi/">
+        <a class="btn btn--zebra js-zebra-link" id="mainZebraBtn" href="zbra://sources/add/https://nishi.heyfrosty.space/">
           <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16v16H4z"/></svg>
           Add to Zebra
         </a>
@@ -433,7 +433,7 @@
       <div class="guide-step">
         <span class="guide-step__num">03</span>
         <h4>Enter Repository URL</h4>
-        <p>Paste the repository URL (<code style="font-family:var(--mono);color:var(--ink)">https://enafrosty.github.io/Nishi/</code>) or tap the "Add to Sileo" button directly from Safari on your device.</p>
+        <p>Paste the repository URL (<code style="font-family:var(--mono);color:var(--ink)">https://nishi.heyfrosty.space/</code>) or tap the "Add to Sileo" button directly from Safari on your device.</p>
       </div>
 
       <div class="guide-step">
@@ -633,7 +633,7 @@
     if (!url.endsWith("/")) url += "/";
     // Fallback if local file protocol
     if (url.startsWith("file:")) {
-      return "https://enafrosty.github.io/Nishi/";
+      return "https://nishi.heyfrosty.space/";
     }
     return url;
   }
