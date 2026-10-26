@@ -12,7 +12,6 @@
     int _tokenPasteboard;
     int _tokenUIKit;
     int _tokenExt;
-    NSTimer *_pollTimer;
 }
 @end
 
@@ -44,9 +43,9 @@
     if (_isObserving) return;
     _isObserving = YES;
     
-    YunaLog(@"Starting Yuna clipboard server in SpringBoard...");
+    YunaLog(@"Starting Yuna clipboard server in SpringBoard (event-driven, zero polling)...");
     
-    // Initial change count on main thread
+    // Initial change count
     UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
     _lastChangeCount = pasteboard.changeCount;
     
@@ -56,27 +55,21 @@
                                                  name:UIPasteboardChangedNotification
                                                object:nil];
     
-    // 2. System Darwin pasteboard notifications
+    // 2. System Darwin pasteboard notifications on background queue (zero impact on SpringBoard main thread)
     __weak typeof(self) weakSelf = self;
-    notify_register_dispatch("com.apple.Pasteboard.pasteboardChanged", &_tokenPasteboard, dispatch_get_main_queue(), ^(int token) {
-        [weakSelf checkPasteboardOnMainThread];
+    dispatch_queue_t bgQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+    
+    notify_register_dispatch("com.apple.Pasteboard.pasteboardChanged", &_tokenPasteboard, bgQueue, ^(int token) {
+        [weakSelf checkPasteboard];
     });
     
-    notify_register_dispatch("com.apple.uikit.pasteboardchanged", &_tokenUIKit, dispatch_get_main_queue(), ^(int token) {
-        [weakSelf checkPasteboardOnMainThread];
+    notify_register_dispatch("com.apple.uikit.pasteboardchanged", &_tokenUIKit, bgQueue, ^(int token) {
+        [weakSelf checkPasteboard];
     });
     
-    notify_register_dispatch(YUNA_EXT_PASTEBOARD_NOTIFICATION, &_tokenExt, dispatch_get_main_queue(), ^(int token) {
-        [weakSelf checkPasteboardOnMainThread];
+    notify_register_dispatch(YUNA_EXT_PASTEBOARD_NOTIFICATION, &_tokenExt, bgQueue, ^(int token) {
+        [weakSelf checkPasteboard];
     });
-    
-    // 3. Periodic fallback timer while SpringBoard is active (every 2.5s)
-    _pollTimer = [NSTimer scheduledTimerWithTimeInterval:2.5
-                                                  target:self
-                                                selector:@selector(checkPasteboardOnMainThread)
-                                                userInfo:nil
-                                                 repeats:YES];
-    [[NSRunLoop mainRunLoop] addTimer:_pollTimer forMode:NSRunLoopCommonModes];
 }
 
 - (void)stopServer {
@@ -89,19 +82,16 @@
     if (_tokenPasteboard > 0) notify_cancel(_tokenPasteboard);
     if (_tokenUIKit > 0) notify_cancel(_tokenUIKit);
     if (_tokenExt > 0) notify_cancel(_tokenExt);
-    
-    [_pollTimer invalidate];
-    _pollTimer = nil;
 }
 
 - (void)pasteboardChanged:(NSNotification *)note {
-    [self checkPasteboardOnMainThread];
+    [self checkPasteboard];
 }
 
-- (void)checkPasteboardOnMainThread {
+- (void)checkPasteboard {
     if (![NSThread isMainThread]) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self checkPasteboardOnMainThread];
+            [self checkPasteboard];
         });
         return;
     }
@@ -110,6 +100,8 @@
     if (!settings.enabled) return;
     
     UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
+    if (!pasteboard) return;
+    
     NSInteger currentChangeCount = pasteboard.changeCount;
     if (currentChangeCount == _lastChangeCount) {
         return;
@@ -140,31 +132,11 @@
                        settings:(YunaSettingsHelper *)settings {
     // 1. Process Image
     if (image) {
-        CGSize size = image.size;
-        CGFloat maxDim = 1200.0;
-        if (size.width > maxDim || size.height > maxDim) {
-            CGFloat scale = (size.width > size.height) ? (maxDim / size.width) : (maxDim / size.height);
-            CGSize targetSize = CGSizeMake(floor(size.width * scale), floor(size.height * scale));
-            UIGraphicsBeginImageContextWithOptions(targetSize, NO, 1.0);
-            [image drawInRect:CGRectMake(0, 0, targetSize.width, targetSize.height)];
-            image = UIGraphicsGetImageFromCurrentImageContext();
-            UIGraphicsEndImageContext();
-        }
-        
-        NSData *data = UIImageJPEGRepresentation(image, 0.85);
-        if (!data) {
-            data = UIImagePNGRepresentation(image);
-        }
-        
-        if (data && data.length > 0) {
-            NSError *error = nil;
-            NSString *fileName = [[YunaStorage sharedInstance] saveImageData:data error:&error];
-            if (fileName) {
-                YunaItem *item = [YunaItem itemWithImageRelativePath:fileName size:data.length];
-                [[YunaStorage sharedInstance] addItem:item];
-                YunaLog(@"Saved copied image (%lu bytes): %@", (unsigned long)data.length, fileName);
-                return;
-            }
+        YunaItem *item = [YunaItem itemWithImage:image];
+        if (item) {
+            [[YunaStorage sharedInstance] addItem:item];
+            YunaLog(@"Saved copied image (%lu bytes)", (unsigned long)item.itemSize);
+            return;
         }
     }
     

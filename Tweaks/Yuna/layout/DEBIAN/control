@@ -1,6 +1,6 @@
 Package: com.frosty.yuna
 Name: Yuna
-Version: 1.0.1
+Version: 1.0.2
 Architecture: iphoneos-arm64
 Description: Universal clipboard button in the keyboard for text, images, and files with pinning and customizable row management.
 Maintainer: frosty

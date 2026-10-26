@@ -70,7 +70,7 @@
         {
           "class": "DepictionTableTextView",
           "title": "Version",
-          "text": "1.0.1"
+          "text": "1.0.2"
         },
         {
           "class": "DepictionTableTextView",
@@ -88,6 +88,17 @@
     {
       "tabname": "Changelog",
       "views": [
+        {
+          "class": "DepictionHeaderView",
+          "title": "Version 1.0.2"
+        },
+        {
+          "class": "DepictionMarkdownView",
+          "markdown": "- **Reliable In-App Clipboard Capture**: Intercepts all pasteboard write paths in active processes and auto-synchronizes on dock tap, ensuring snippets transfer immediately even across sandboxed apps.\n- **Touch Pass-Through Elimination**: Added strict hit-testing overrides on UIKeyboardLayoutStar and YunaPanelView to completely prevent touches in the clipboard panel from pressing keyboard keys underneath.\n- **LiquidGlass & SpringBoard Stability**: Completely removed periodic timers and blocking main-runloop pasteboard IPC in SpringBoard, eliminating watchdog freezes and hitches when running with visual tweaks like Liquid(Gl)ass."
+        },
+        {
+          "class": "DepictionSeparatorView"
+        },
         {
           "class": "DepictionHeaderView",
           "title": "Version 1.0.1"

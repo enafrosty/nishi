@@ -379,7 +379,7 @@
         <div class="tweak-card__head">
           <div class="tweak-card__badges">
             <span class="badge badge--highlight">FLAGSHIP</span>
-            <span class="badge badge--green">v1.0.1</span>
+            <span class="badge badge--green">v1.0.2</span>
             <span class="badge">ROOTLESS</span>
           </div>
           <span class="badge" style="font-family:var(--mono)">arm64 & arm64e</span>
@@ -408,7 +408,7 @@
         <div class="tweak-card__actions">
           <button class="btn btn--go btn--sm" id="openYunaModalBtn">Details & Sileo Depiction</button>
           <a class="btn btn--sileo btn--sm" id="yunaSileoBtn" href="sileo://package/com.frosty.yuna">Install in Sileo</a>
-          <a class="btn btn--quiet btn--sm" href="debs/com.frosty.yuna_1.0.1_iphoneos-arm64.deb" download>Download .deb</a>
+          <a class="btn btn--quiet btn--sm" href="debs/com.frosty.yuna_1.0.2_iphoneos-arm64.deb" download>Download .deb</a>
         </div>
       </article>
 
@@ -489,7 +489,7 @@
       <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
         <img src="Tweaks/Yuna/depiction/icon.png" alt="Yuna Icon" style="width:64px;height:64px;border-radius:14px;border:1px solid var(--edge);box-shadow:0 4px 12px rgba(0,0,0,.6);object-fit:cover;background:#0E0C0D;flex-shrink:0">
         <div>
-          <h2 id="modalTitle" style="margin:0 0 4px">YUNA (v1.0.1)</h2>
+          <h2 id="modalTitle" style="margin:0 0 4px">YUNA (v1.0.2)</h2>
           <p style="color:var(--tint-orange);font-family:var(--mono);font-size:12px;margin:0">com.frosty.yuna • Section: Tweaks</p>
         </div>
       </div>
@@ -519,7 +519,7 @@
         </table>
         <div style="display:flex;gap:10px;margin-top:20px">
           <a class="btn btn--sileo btn--sm" href="sileo://package/com.frosty.yuna">Open in Sileo</a>
-          <a class="btn btn--go btn--sm" href="debs/com.frosty.yuna_1.0.1_iphoneos-arm64.deb" download>Download .deb</a>
+          <a class="btn btn--go btn--sm" href="debs/com.frosty.yuna_1.0.2_iphoneos-arm64.deb" download>Download .deb</a>
         </div>
       </div>
 
@@ -558,6 +558,13 @@
 
       <!-- Tab 4: Changelog -->
       <div class="modal-pane" id="pane-changelog" data-on="0">
+        <p><strong>Version 1.0.2 (In-App Capture, Touch Pass-Through & Stability Fixes)</strong></p>
+        <ul style="font-size:13px;line-height:1.7;color:var(--dim);padding-left:20px;margin-bottom:20px">
+          <li><strong>Direct In-App Clipboard Capture:</strong> Intercepts all pasteboard write paths in active processes and synchronizes immediately on dock button tap, ensuring snippets transfer across sandboxed and unsandboxed apps alike.</li>
+          <li><strong>Touch Pass-Through Elimination:</strong> Overrode hit testing on UIKeyboardLayoutStar and YunaPanelView to completely prevent touches on the clipboard panel from pressing keyboard keys underneath.</li>
+          <li><strong>LiquidGlass & SpringBoard Stability:</strong> Completely removed periodic polling timers and blocking main-runloop pasteboard IPC in SpringBoard, eliminating watchdog freezes and hitches when running with visual tweaks like Liquid(Gl)ass.</li>
+        </ul>
+
         <p><strong>Version 1.0.1 (Native Respring & Dock Polish)</strong></p>
         <ul style="font-size:13px;line-height:1.7;color:var(--dim);padding-left:20px;margin-bottom:20px">
           <li><strong>Native Sileo Respring:</strong> Replaced automatic script respring with native <code>cydia::respring</code> tag integration. Sileo now presents its native "Restart SpringBoard" prompt.</li>

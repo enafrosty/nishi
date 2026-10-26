@@ -7,11 +7,11 @@ Architectures: iphoneos-arm64
 Components: main
 Description: Rootless iOS jailbreak tweak repository by frosty
 MD5Sum:
- e3ddef0db95d028c56510fdbebf78a00 822 Packages
- 0e57b8653972c79cb6910bbdfe89caf0 523 Packages.gz
+ cf4c240bda9df89c32d8968ac16f5934 1661 Packages
+ 6ab73986b8a74e1d6881ed9b9878df48 653 Packages.gz
 SHA1:
- ea27e5dbdb48a7d8376e966e417280a7ec494486 822 Packages
- 4ef2b5ef14486564cd685156d6021b8875686d05 523 Packages.gz
+ df658c9906e50cdb6029576849c4eb6d2eadd0cd 1661 Packages
+ e09f20d2560db07d1bd2abdfece2688a6da956e9 653 Packages.gz
 SHA256:
- 2eee22de6c83dc663ec8a2ac58a798eb5e8c2b31c16777cc268b26baf764831d 822 Packages
- 80ba00f83ae873d968b817837072a9d259d815886a2ddf26447868b3afc75630 523 Packages.gz
+ 64bc4b1a8d5d9fb0ca03c80936a4a93d0c02bd1e66ba4ce563841cbbea0df6ed 1661 Packages
+ 21360b4b7a0b959ff9f1fe5d3852a4469d7dd2b60d15cdab6c489d26badeb7a8 653 Packages.gz

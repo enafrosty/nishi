@@ -12,6 +12,7 @@
 static const char kYunaDockButtonKey;
 static const char kYunaPanelViewKey;
 static const char kYunaPrefsTokenKey;
+static __weak YunaPanelView *kYunaActivePanel = nil;
 
 static UIView *yna_extractDockItemView(id dockItem) {
     if (!dockItem) return nil;
@@ -35,6 +36,7 @@ static UIView *yna_extractDockItemView(id dockItem) {
 @property (nonatomic, strong, nullable) YunaPanelView *yunaPanelView;
 - (void)yna_layoutDockButton;
 - (void)yna_registerPrefsObserver;
+- (void)yna_syncCurrentPasteboard;
 @end
 
 %group SpringBoardHooks
@@ -53,25 +55,170 @@ static UIView *yna_extractDockItemView(id dockItem) {
 
 %group KeyboardHooks
 
+static void yna_recordPasteboardItem(UIPasteboard *pb) {
+    if (!pb) return;
+    @autoreleasepool {
+        YunaSettingsHelper *settings = [YunaSettingsHelper sharedHelper];
+        if (!settings.enabled) return;
+        
+        YunaStorage *storage = [YunaStorage sharedInstance];
+        
+        // 1. Image
+        if (settings.saveImages && (pb.hasImages || [pb containsPasteboardTypes:@[@"public.png", @"public.jpeg", @"public.tiff"]])) {
+            UIImage *img = pb.image;
+            if (img) {
+                [storage addItem:[YunaItem itemWithImage:img]];
+                return;
+            }
+        }
+        
+        // 2. URL or file
+        if (settings.saveFiles && (pb.hasURLs || pb.URL != nil)) {
+            NSURL *url = pb.URL;
+            if (url) {
+                if ([url isFileURL]) {
+                    NSNumber *fileSize = nil;
+                    [url getResourceValue:&fileSize forKey:NSURLFileSizeKey error:nil];
+                    [storage addItem:[YunaItem itemWithFileURL:url size:[fileSize unsignedIntegerValue]]];
+                } else {
+                    [storage addItem:[YunaItem itemWithURL:url]];
+                }
+                return;
+            }
+        }
+        
+        // 3. String
+        if (pb.hasStrings || pb.string.length > 0) {
+            NSString *str = pb.string;
+            if (str && [str stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]].length > 0) {
+                if ([str hasPrefix:@"http://"] || [str hasPrefix:@"https://"]) {
+                    NSURL *candURL = [NSURL URLWithString:str];
+                    if (candURL && candURL.host) {
+                        [storage addItem:[YunaItem itemWithURL:candURL]];
+                        return;
+                    }
+                }
+                [storage addItem:[YunaItem itemWithText:str]];
+                return;
+            }
+        }
+    }
+}
+
+%hook UIKeyboardLayoutStar
+
+- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event {
+    if (kYunaActivePanel && kYunaActivePanel.superview && !kYunaActivePanel.hidden && kYunaActivePanel.alpha > 0.05) {
+        CGPoint pInPanel = [self convertPoint:point toView:kYunaActivePanel];
+        if ([kYunaActivePanel pointInside:pInPanel withEvent:event]) {
+            return nil; // Prevent touches in Yuna bounds from reaching keyboard keys
+        }
+    }
+    return %orig;
+}
+
+%end
+
 %hook UIPasteboard
 
 - (void)setString:(NSString *)string {
     %orig;
+    if (string && string.length > 0) {
+        [[YunaStorage sharedInstance] addItem:[YunaItem itemWithText:string]];
+    }
+    notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
+}
+
+- (void)setStrings:(NSArray<NSString *> *)strings {
+    %orig;
+    if (strings.firstObject && strings.firstObject.length > 0) {
+        [[YunaStorage sharedInstance] addItem:[YunaItem itemWithText:strings.firstObject]];
+    }
     notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
 }
 
 - (void)setImage:(UIImage *)image {
     %orig;
+    if (image) {
+        [[YunaStorage sharedInstance] addItem:[YunaItem itemWithImage:image]];
+    }
+    notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
+}
+
+- (void)setImages:(NSArray<UIImage *> *)images {
+    %orig;
+    if (images.firstObject) {
+        [[YunaStorage sharedInstance] addItem:[YunaItem itemWithImage:images.firstObject]];
+    }
     notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
 }
 
 - (void)setURL:(NSURL *)url {
     %orig;
+    if (url) {
+        if ([url isFileURL]) {
+            NSNumber *fileSize = nil;
+            [url getResourceValue:&fileSize forKey:NSURLFileSizeKey error:nil];
+            [[YunaStorage sharedInstance] addItem:[YunaItem itemWithFileURL:url size:[fileSize unsignedIntegerValue]]];
+        } else {
+            [[YunaStorage sharedInstance] addItem:[YunaItem itemWithURL:url]];
+        }
+    }
+    notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
+}
+
+- (void)setURLs:(NSArray<NSURL *> *)urls {
+    %orig;
+    if (urls.firstObject) {
+        NSURL *url = urls.firstObject;
+        if ([url isFileURL]) {
+            NSNumber *fileSize = nil;
+            [url getResourceValue:&fileSize forKey:NSURLFileSizeKey error:nil];
+            [[YunaStorage sharedInstance] addItem:[YunaItem itemWithFileURL:url size:[fileSize unsignedIntegerValue]]];
+        } else {
+            [[YunaStorage sharedInstance] addItem:[YunaItem itemWithURL:url]];
+        }
+    }
+    notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
+}
+
+- (void)setItems:(NSArray *)items {
+    %orig;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        yna_recordPasteboardItem(self);
+    });
     notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
 }
 
 - (void)setItems:(NSArray *)items options:(NSDictionary *)options {
     %orig;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        yna_recordPasteboardItem(self);
+    });
+    notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
+}
+
+- (void)setValue:(id)value forPasteboardType:(NSString *)pasteboardType {
+    %orig;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        yna_recordPasteboardItem(self);
+    });
+    notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
+}
+
+- (void)setData:(NSData *)data forPasteboardType:(NSString *)pasteboardType {
+    %orig;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        yna_recordPasteboardItem(self);
+    });
+    notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
+}
+
+- (void)setObjects:(NSArray *)objects {
+    %orig;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        yna_recordPasteboardItem(self);
+    });
     notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
 }
 
@@ -100,6 +247,11 @@ static UIView *yna_extractDockItemView(id dockItem) {
     }
     
     [self yna_layoutDockButton];
+    
+    YunaPanelView *existingPanel = objc_getAssociatedObject(self, &kYunaPanelViewKey);
+    if (existingPanel && existingPanel.superview) {
+        [existingPanel.superview bringSubviewToFront:existingPanel];
+    }
 }
 
 %new
@@ -218,6 +370,36 @@ static UIView *yna_extractDockItemView(id dockItem) {
 }
 
 %new
+- (void)yna_syncCurrentPasteboard {
+    @autoreleasepool {
+        UIPasteboard *pb = [UIPasteboard generalPasteboard];
+        if (!pb) return;
+        
+        YunaStorage *storage = [YunaStorage sharedInstance];
+        [storage reloadFromDisk];
+        
+        if (pb.hasStrings && pb.string && pb.string.length > 0) {
+            NSString *str = pb.string;
+            YunaItem *top = [storage allItems].firstObject;
+            if (!top || top.type != YunaItemTypeText || ![top.text isEqualToString:str]) {
+                yna_recordPasteboardItem(pb);
+            }
+        } else if (pb.hasImages && pb.image) {
+            YunaItem *top = [storage allItems].firstObject;
+            if (!top || top.type != YunaItemTypeImage) {
+                yna_recordPasteboardItem(pb);
+            }
+        } else if (pb.hasURLs && pb.URL) {
+            NSURL *url = pb.URL;
+            YunaItem *top = [storage allItems].firstObject;
+            if (!top || top.type != YunaItemTypeURL || ![top.fileURLString isEqualToString:url.absoluteString]) {
+                yna_recordPasteboardItem(pb);
+            }
+        }
+    }
+}
+
+%new
 - (void)yunaDockButtonDidTap:(UIButton *)button {
     UIView *container = self.superview;
     if (!container) return;
@@ -229,6 +411,9 @@ static UIView *yna_extractDockItemView(id dockItem) {
         return;
     }
     
+    // Synchronize latest clipboard content into storage before presenting
+    [self yna_syncCurrentPasteboard];
+    
     CGFloat dockH = self.bounds.size.height;
     CGFloat targetH = container.bounds.size.height - dockH;
     if (targetH < 180.0) {
@@ -239,12 +424,16 @@ static UIView *yna_extractDockItemView(id dockItem) {
     panel = [YunaPanelView panelViewWithFrame:panelFrame];
     panel.delegate = (id<YunaPanelViewDelegate>)self;
     objc_setAssociatedObject(self, &kYunaPanelViewKey, panel, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    kYunaActivePanel = panel;
     
     [panel presentInView:container];
 }
 
 %new
 - (void)yunaPanelViewDidRequestDismiss:(UIView *)panelView {
+    if (kYunaActivePanel == panelView) {
+        kYunaActivePanel = nil;
+    }
     objc_setAssociatedObject(self, &kYunaPanelViewKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 

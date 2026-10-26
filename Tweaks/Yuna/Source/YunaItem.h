@@ -10,6 +10,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) YunaItemType type;
 @property (nonatomic, copy, nullable) NSString *text;
 @property (nonatomic, copy, nullable) NSString *imageRelativePath;
+@property (nonatomic, copy, nullable) NSString *imageBase64;
 @property (nonatomic, copy, nullable) NSString *fileURLString;
 @property (nonatomic, copy, nullable) NSString *title;
 @property (nonatomic, assign) NSTimeInterval timestamp;
@@ -17,6 +18,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) NSUInteger itemSize;
 
 + (instancetype)itemWithText:(NSString *)text;
++ (instancetype)itemWithImage:(UIImage *)image;
 + (instancetype)itemWithImageRelativePath:(NSString *)relPath size:(NSUInteger)size;
 + (instancetype)itemWithURL:(NSURL *)url;
 + (instancetype)itemWithFileURL:(NSURL *)fileURL size:(NSUInteger)size;

@@ -360,6 +360,29 @@ typedef NS_ENUM(NSInteger, YunaFilterTab) {
     [self dismissAnimated:YES];
 }
 
+#pragma mark - Hit Testing & Touch Handling
+
+- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event {
+    if (self.hidden || self.alpha < 0.01 || !self.userInteractionEnabled) {
+        return nil;
+    }
+    if ([self pointInside:point withEvent:event]) {
+        UIView *hit = [super hitTest:point withEvent:event];
+        // If super returned nil (touch landed in empty background or margins),
+        // absorb it so it NEVER passes through to keyboard keys underneath!
+        return hit ?: self;
+    }
+    return nil;
+}
+
+- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    // Absorb touches so they do not propagate up to keyboard keys or host views
+}
+
+- (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {}
+- (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {}
+- (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {}
+
 #pragma mark - Presentation / Dismissal
 
 - (void)presentInView:(UIView *)containerView {
@@ -373,6 +396,7 @@ typedef NS_ENUM(NSInteger, YunaFilterTab) {
     self.alpha = 1.0;
     self.frame = CGRectMake(0, containerView.bounds.size.height, targetFrame.size.width, targetFrame.size.height);
     [containerView addSubview:self];
+    [containerView bringSubviewToFront:self];
     
     [UIView animateWithDuration:0.28 delay:0 usingSpringWithDamping:0.86 initialSpringVelocity:0.2 options:UIViewAnimationOptionCurveEaseOut animations:^{
         self.frame = targetFrame;

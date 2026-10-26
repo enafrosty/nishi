@@ -55,15 +55,28 @@
 }
 
 - (void)_lockedReloadFromDisk {
-    NSString *filePath = YUNA_HISTORY_FILE;
-    NSFileManager *fm = [NSFileManager defaultManager];
-    if (![fm fileExistsAtPath:filePath]) {
-        _items = [NSMutableArray array];
-        return;
+    NSArray *plistData = nil;
+    
+    // 1. Check CFPreferences first (accessible across sandboxed apps via cfprefsd)
+    CFPreferencesAppSynchronize((CFStringRef)YUNA_BUNDLE_ID);
+    CFPropertyListRef prefVal = CFPreferencesCopyAppValue(CFSTR("clipboard_history"), (CFStringRef)YUNA_BUNDLE_ID);
+    if (prefVal) {
+        if ([(__bridge id)prefVal isKindOfClass:[NSArray class]]) {
+            plistData = (__bridge_transfer NSArray *)prefVal;
+        } else {
+            CFRelease(prefVal);
+        }
     }
     
-    NSArray *plistData = [NSArray arrayWithContentsOfFile:filePath];
-    if (![plistData isKindOfClass:[NSArray class]]) {
+    // 2. Fallback to file storage if preferences are empty
+    if (!plistData || plistData.count == 0) {
+        NSString *filePath = YUNA_HISTORY_FILE;
+        if ([[NSFileManager defaultManager] fileExistsAtPath:filePath]) {
+            plistData = [NSArray arrayWithContentsOfFile:filePath];
+        }
+    }
+    
+    if (!plistData || ![plistData isKindOfClass:[NSArray class]]) {
         _items = [NSMutableArray array];
         return;
     }
@@ -100,12 +113,14 @@
         [plistArray addObject:[item dictionaryRepresentation]];
     }
     
-    BOOL success = [plistArray writeToFile:filePath atomically:YES];
-    if (!success) {
-        YunaLog(@"Failed to write clipboard history to %@", filePath);
-    } else {
-        notify_post(YUNA_CLIPBOARD_NOTIFICATION);
-    }
+    // 1. Sync to CFPreferences domain (accessible by all apps via cfprefsd)
+    CFPreferencesSetAppValue(CFSTR("clipboard_history"), (__bridge CFPropertyListRef)plistArray, (CFStringRef)YUNA_BUNDLE_ID);
+    CFPreferencesAppSynchronize((CFStringRef)YUNA_BUNDLE_ID);
+    
+    // 2. Also write to rootless file path if writable
+    [plistArray writeToFile:filePath atomically:YES];
+    
+    notify_post(YUNA_CLIPBOARD_NOTIFICATION);
 }
 
 - (void)_lockedDeleteAssociatedImageFileForItem:(YunaItem *)item {
@@ -366,10 +381,7 @@
     NSString *fullPath = [YUNA_IMAGES_DIR stringByAppendingPathComponent:fileName];
     
     if (![[NSFileManager defaultManager] fileExistsAtPath:fullPath]) {
-        BOOL written = [imageData writeToFile:fullPath options:NSDataWritingAtomic error:error];
-        if (!written) {
-            return nil;
-        }
+        [imageData writeToFile:fullPath options:NSDataWritingAtomic error:nil];
     }
     
     return fileName;

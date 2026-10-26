@@ -1,4 +1,5 @@
 #import "YunaItem.h"
+#import "YunaStorage.h"
 
 @implementation YunaItem
 
@@ -20,6 +21,39 @@
     item.text = text ?: @"";
     item.title = [self truncatedPreviewForString:text maxChars:40];
     item.itemSize = [text lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
+    return item;
+}
+
++ (instancetype)itemWithImage:(UIImage *)image {
+    if (!image) return nil;
+    
+    CGSize size = image.size;
+    CGFloat maxDim = 320.0;
+    UIImage *thumb = image;
+    if (size.width > maxDim || size.height > maxDim) {
+        CGFloat scale = (size.width > size.height) ? (maxDim / size.width) : (maxDim / size.height);
+        CGSize targetSize = CGSizeMake(floor(size.width * scale), floor(size.height * scale));
+        UIGraphicsBeginImageContextWithOptions(targetSize, NO, 1.0);
+        [image drawInRect:CGRectMake(0, 0, targetSize.width, targetSize.height)];
+        thumb = UIGraphicsGetImageFromCurrentImageContext();
+        UIGraphicsEndImageContext();
+    }
+    
+    NSData *thumbData = UIImageJPEGRepresentation(thumb, 0.7);
+    NSString *b64 = [thumbData base64EncodedStringWithOptions:0];
+    
+    NSData *fullData = UIImageJPEGRepresentation(image, 0.85);
+    if (!fullData) fullData = thumbData;
+    
+    NSError *err = nil;
+    NSString *fileName = [[YunaStorage sharedInstance] saveImageData:fullData error:&err];
+    
+    YunaItem *item = [[YunaItem alloc] init];
+    item.type = YunaItemTypeImage;
+    item.imageRelativePath = fileName;
+    item.imageBase64 = b64;
+    item.title = @"Image";
+    item.itemSize = fullData.length;
     return item;
 }
 
@@ -74,6 +108,7 @@
     
     if (self.text) dict[@"text"] = self.text;
     if (self.imageRelativePath) dict[@"imageRelativePath"] = self.imageRelativePath;
+    if (self.imageBase64) dict[@"imageBase64"] = self.imageBase64;
     if (self.fileURLString) dict[@"fileURLString"] = self.fileURLString;
     if (self.title) dict[@"title"] = self.title;
     
@@ -92,6 +127,7 @@
     
     item.text = dict[@"text"];
     item.imageRelativePath = dict[@"imageRelativePath"];
+    item.imageBase64 = dict[@"imageBase64"];
     item.fileURLString = dict[@"fileURLString"];
     item.title = dict[@"title"];
     
@@ -158,11 +194,23 @@
 }
 
 - (nullable UIImage *)loadImage {
-    if (self.type != YunaItemTypeImage || !self.imageRelativePath) {
+    if (self.type != YunaItemTypeImage) {
         return nil;
     }
-    NSString *fullPath = [YUNA_IMAGES_DIR stringByAppendingPathComponent:self.imageRelativePath];
-    return [UIImage imageWithContentsOfFile:fullPath];
+    if (self.imageBase64 && self.imageBase64.length > 0) {
+        NSData *data = [[NSData alloc] initWithBase64EncodedString:self.imageBase64 options:NSDataBase64DecodingIgnoreUnknownCharacters];
+        if (data && data.length > 0) {
+            UIImage *img = [UIImage imageWithData:data];
+            if (img) return img;
+        }
+    }
+    if (self.imageRelativePath && self.imageRelativePath.length > 0) {
+        NSString *fullPath = [YUNA_IMAGES_DIR stringByAppendingPathComponent:self.imageRelativePath];
+        if ([[NSFileManager defaultManager] fileExistsAtPath:fullPath]) {
+            return [UIImage imageWithContentsOfFile:fullPath];
+        }
+    }
+    return nil;
 }
 
 @end
