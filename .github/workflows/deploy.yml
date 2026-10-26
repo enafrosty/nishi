@@ -61,11 +61,12 @@ jobs:
           cp include/libellekit.tbd ~/theos/lib/rootless/
           echo "THEOS=$HOME/theos" >> $GITHUB_ENV
           echo "THEOS_PACKAGE_SCHEME=rootless" >> $GITHUB_ENV
+          echo "SDKVERSION=16.5" >> $GITHUB_ENV
 
       - name: Compile and Package Rootless Tweak
         run: |
           make clean
-          make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless ARCHS="arm64 arm64e"
+          make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless ARCHS="arm64 arm64e" SDKVERSION=16.5
 
       - name: Stash Built Debs
         run: |
