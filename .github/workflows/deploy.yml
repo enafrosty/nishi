@@ -52,7 +52,10 @@ jobs:
           git clone --recursive https://github.com/theos/theos.git ~/theos
           rm -rf ~/theos/sdks
           git clone --depth=1 https://github.com/theos/sdks.git ~/theos/sdks
-          cp include/libellekit.tbd ~/theos/lib/libellekit.tbd
+          mkdir -p ~/theos/lib ~/theos/lib/iphone/rootless ~/theos/lib/rootless
+          cp include/libellekit.tbd ~/theos/lib/
+          cp include/libellekit.tbd ~/theos/lib/iphone/rootless/
+          cp include/libellekit.tbd ~/theos/lib/rootless/
           echo "THEOS=$HOME/theos" >> $GITHUB_ENV
           echo "THEOS_PACKAGE_SCHEME=rootless" >> $GITHUB_ENV
 

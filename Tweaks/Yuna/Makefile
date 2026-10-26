@@ -11,6 +11,7 @@ Yuna_FILES = $(wildcard Source/*.x Source/*.m Source/UI/*.m)
 Yuna_CFLAGS = -fobjc-arc -Wall -Wextra -Wno-unused-parameter -Wno-deprecated-declarations -Wno-sign-compare -Wno-error -Iinclude -I../../include -ISource -ISource/Headers -ISource/UI
 Yuna_FRAMEWORKS = UIKit Foundation CoreGraphics QuartzCore
 Yuna_LIBRARIES = ellekit
+Yuna_LDFLAGS = -Linclude -L../../include
 
 include $(THEOS_MAKE_PATH)/tweak.mk
 
