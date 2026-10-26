@@ -194,7 +194,7 @@ typedef NS_ENUM(NSInteger, YunaFilterTab) {
 
 - (__kindof UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
     YunaItemCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"YunaItemCell" forIndexPath:indexPath];
-    if (indexPath.item < _displayItems.count) {
+    if (indexPath.item >= 0 && (NSUInteger)indexPath.item < _displayItems.count) {
         YunaItem *item = _displayItems[indexPath.item];
         [cell configureWithItem:item];
         cell.delegate = self;
@@ -227,7 +227,7 @@ typedef NS_ENUM(NSInteger, YunaFilterTab) {
 }
 
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
-    if (indexPath.item >= _displayItems.count) return;
+    if (indexPath.item < 0 || (NSUInteger)indexPath.item >= _displayItems.count) return;
     YunaItem *item = _displayItems[indexPath.item];
     
     [[YunaSettingsHelper sharedHelper] triggerHapticFeedback];
@@ -291,7 +291,7 @@ typedef NS_ENUM(NSInteger, YunaFilterTab) {
     
     CGPoint point = [gesture locationInView:self.collectionView];
     NSIndexPath *indexPath = [self.collectionView indexPathForItemAtPoint:point];
-    if (!indexPath || indexPath.item >= _displayItems.count) return;
+    if (!indexPath || indexPath.item < 0 || (NSUInteger)indexPath.item >= _displayItems.count) return;
     
     YunaItem *item = _displayItems[indexPath.item];
     [[YunaSettingsHelper sharedHelper] triggerHapticFeedback];
