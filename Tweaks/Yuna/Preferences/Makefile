@@ -10,7 +10,7 @@ YunaPrefs_FILES = Source/YNARootListController.m ../Source/YunaStorage.m ../Sour
 YunaPrefs_INSTALL_PATH = /Library/PreferenceBundles
 YunaPrefs_FRAMEWORKS = UIKit
 YunaPrefs_PRIVATE_FRAMEWORKS = Preferences
-YunaPrefs_CFLAGS = -fobjc-arc -Wno-deprecated-declarations -I../Source/Headers -I../../../include -I../../include
+YunaPrefs_CFLAGS = -fobjc-arc -Wno-deprecated-declarations -I../Source -I../Source/Headers -I../Source/UI -I../../../include -I../../include -Iinclude
 
 include $(THEOS_MAKE_PATH)/bundle.mk
 
