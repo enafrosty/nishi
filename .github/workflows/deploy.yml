@@ -50,6 +50,7 @@ jobs:
       - name: Setup Theos & iOS SDK
         run: |
           git clone --recursive https://github.com/theos/theos.git ~/theos
+          rm -rf ~/theos/sdks
           git clone --depth=1 https://github.com/theos/sdks.git ~/theos/sdks
           cp include/libellekit.tbd ~/theos/lib/libellekit.tbd
           echo "THEOS=$HOME/theos" >> $GITHUB_ENV
