@@ -217,10 +217,7 @@ static const char kYunaPrefsTokenKey;
         
         if ([bundleID isEqualToString:@"com.apple.springboard"]) {
             %init(SpringBoardHooks);
-            %init(KeyboardHooks);
-        } else {
-            // Standard GUI application
-            %init(KeyboardHooks);
         }
+        %init(KeyboardHooks);
     }
 }
