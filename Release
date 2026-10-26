@@ -1,0 +1,17 @@
+Origin: Nishi
+Label: Nishi
+Suite: stable
+Version: 1.0
+Codename: ios
+Architectures: iphoneos-arm64
+Components: main
+Description: Rootless iOS jailbreak tweak repository by frosty
+MD5Sum:
+ 6a621729571beadceea11f22844b466f 758 Packages
+ 609252636c73d94786f7c6d60ede8b1d 514 Packages.gz
+SHA1:
+ bcd578a64a2845f3239d91090ede987153d759ce 758 Packages
+ ed5ff849efd1469a52726d67fdcbe07b51676f7f 514 Packages.gz
+SHA256:
+ b29e519843f4fb51ab4680b7b3af1a6694d001c940048dd724ffbf5a34d35bed 758 Packages
+ 6cff13b2052f5bc2fa1156073eaec116ec80468bc4a8d3098a1bdcc68f4f9d05 514 Packages.gz

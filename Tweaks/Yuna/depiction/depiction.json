@@ -1,0 +1,96 @@
+{
+  "minVersion": "0.4",
+  "headerImage": "https://enafrosty.github.io/Nishi/Tweaks/Yuna/depiction/banner.png",
+  "tintColor": "#FF9500",
+  "tabs": [
+    {
+      "tabname": "Details",
+      "views": [
+        {
+          "class": "DepictionHeaderView",
+          "title": "Yuna",
+          "useBoldText": true,
+          "useBottomMargin": false
+        },
+        {
+          "class": "DepictionSubheaderView",
+          "title": "Universal Keyboard Clipboard Manager & Media History",
+          "useBoldText": false,
+          "useBottomMargin": true
+        },
+        {
+          "class": "DepictionSeparatorView"
+        },
+        {
+          "class": "DepictionMarkdownView",
+          "markdown": "### Never lose a copied snippet again.\n\n**Yuna** integrates seamlessly into the native iOS keyboard dock, placing a convenient clipboard button right beside your emoji and dictation controls. Easily view, insert, and organize your clipboard history with support for **plain text**, **high-resolution images**, and **file links**.\n\n#### Key Features:\n- **Dock Integration**: Native clipboard trigger button in the iOS keyboard dock.\n- **Universal Content**: Automatically captures text snippets, copied photos/images, web URLs, and file paths.\n- **Pinning Engine**: Pin vital snippets to the top so they are never purged or overwritten.\n- **Multi-Row Layout Management**: Configure 1, 2, 3, or 4 rows of snippets in settings to suit your workflow.\n- **Direct Insertion**: Injects text directly into the active field without extra taps.\n- **Rootless & PAC Safe**: Built for modern Dopamine jailbreaks on arm64 and arm64e (A12/A13) with ElleKit trampolines."
+        },
+        {
+          "class": "DepictionSeparatorView"
+        },
+        {
+          "class": "DepictionHeaderView",
+          "title": "Compatibility"
+        },
+        {
+          "class": "DepictionTableTextView",
+          "title": "Jailbreak",
+          "text": "Dopamine (Rootless)"
+        },
+        {
+          "class": "DepictionTableTextView",
+          "title": "iOS Versions",
+          "text": "iOS 15.0 – 16.x+"
+        },
+        {
+          "class": "DepictionTableTextView",
+          "title": "Architectures",
+          "text": "arm64, arm64e (A12/A13 PAC)"
+        },
+        {
+          "class": "DepictionTableTextView",
+          "title": "Package Manager",
+          "text": "Sileo"
+        },
+        {
+          "class": "DepictionSeparatorView"
+        },
+        {
+          "class": "DepictionHeaderView",
+          "title": "Package Info"
+        },
+        {
+          "class": "DepictionTableTextView",
+          "title": "Version",
+          "text": "1.0.0"
+        },
+        {
+          "class": "DepictionTableTextView",
+          "title": "Developer",
+          "text": "frosty"
+        },
+        {
+          "class": "DepictionTableTextView",
+          "title": "Section",
+          "text": "Tweaks"
+        }
+      ],
+      "class": "DepictionStackView"
+    },
+    {
+      "tabname": "Changelog",
+      "views": [
+        {
+          "class": "DepictionHeaderView",
+          "title": "Version 1.0.0"
+        },
+        {
+          "class": "DepictionMarkdownView",
+          "markdown": "- Initial release in the Nishi repository.\n- Universal keyboard dock clipboard button.\n- Text, image, and file URL clipboard capture.\n- Snippet pinning with eviction protection.\n- Customizable row layout (1 to 4 rows).\n- Native Sileo depiction and rootless Dopamine support."
+        }
+      ],
+      "class": "DepictionStackView"
+    }
+  ],
+  "class": "DepictionTabView"
+}

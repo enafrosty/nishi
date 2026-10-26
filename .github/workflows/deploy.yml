@@ -1,0 +1,130 @@
+name: Test, Build & Deploy Nishi Repository
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Run Verification Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run Python Verification Suite
+        run: python Tweaks/Yuna/tests/test_suite.py
+
+      - name: Compile and Run C++ Storage & Geometry Tests
+        run: |
+          clang++ -std=c++17 Tweaks/Yuna/tests/test_storage_algo.cpp -o test_storage_algo
+          ./test_storage_algo
+
+  build-tweak:
+    name: Build Yuna Tweak (Theos arm64/arm64e)
+    runs-on: macos-latest
+    needs: test
+    continue-on-error: true
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Theos
+        uses: waruhachi/theos-action@v2
+        with:
+          theos-src: 'theos/theos'
+          theos-branch: 'master'
+          sdks-src: 'theos/sdks'
+          sdks-branch: 'master'
+
+      - name: Compile and Package Rootless Tweak
+        run: |
+          make clean
+          make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless ARCHS="arm64 arm64e"
+
+      - name: Stash Built Debs
+        run: |
+          mkdir -p built_debs
+          find packages/ Tweaks/*/packages/ -name "*.deb" -exec cp {} built_debs/ \; 2>/dev/null || true
+          ls -la built_debs/
+
+      - name: Upload Tweak Deb Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: yuna-deb
+          path: built_debs/*.deb
+          if-no-files-found: ignore
+
+  deploy-pages:
+    name: Build Repo & Deploy Pages
+    runs-on: ubuntu-latest
+    needs: [test, build-tweak]
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Download Built Tweak Deb Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: yuna-deb
+          path: downloaded_debs
+        continue-on-error: true
+
+      - name: Update Debs and Build APT Repository Indexes
+        run: |
+          mkdir -p debs
+          if [ -d "downloaded_debs" ] && ls downloaded_debs/*.deb 1> /dev/null 2>&1; then
+            echo "[*] Copying freshly compiled debs from CI build..."
+            cp -vf downloaded_debs/*.deb debs/
+          else
+            echo "[*] No new CI deb artifact downloaded; packaging/using existing repository packages..."
+            python scripts/package_yuna.py
+          fi
+          python scripts/build_repo.py
+
+      - name: Verify Repository Distribution Artifacts
+        run: |
+          ls -la Packages Packages.gz Release debs/
+          test -f Packages
+          test -f Packages.gz
+          test -f Release
+          test -f index.html
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "."
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

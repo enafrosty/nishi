@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nishi — Rootless iOS Tweak Repository</title>
+<meta name="description" content="Official rootless iOS tweak repository by frosty for Dopamine on arm64 and arm64e (iOS 15.0+). Home of Yuna clipboard manager.">
+<link rel="icon" type="image/png" href="CydiaIcon.png">
+<style>
+  :root {
+    --bg: #0D0B0C;
+    --ink: #FFF6EA;
+    --dim: #9C948B;
+    --faint: #6A635C;
+    --edge: rgba(255, 246, 234, .13);
+    --edge-soft: rgba(255, 246, 234, .06);
+    --panel: #171416;
+    --panel-2: #1F1B1E;
+
+    --tint: #FF9500;
+    --tint-pink: #FF4D7E;
+    --tint-orange: #FF9500;
+    --tint-yellow: #FFD24B;
+    --tint-green: #5FD39B;
+    --tint-cyan: #4FB8F5;
+    --tint-purple: #B08CF9;
+
+    --sign: "Arial Black", "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+    --body: system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background:
+      radial-gradient(90% 60% at 50% 0%, #1A1518 0%, var(--bg) 62%),
+      var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    padding-bottom: 90px;
+  }
+
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; background: none; border: 0; }
+  a { color: inherit; text-decoration: none; }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+  /* Ambient glowing plate from ranking.heyfrosty.space */
+  .plate {
+    position: fixed; inset: -12%;
+    background: radial-gradient(circle at 50% 18%, rgba(255, 149, 0, .08) 0%, rgba(255, 77, 126, .04) 28%, transparent 65%);
+    filter: blur(64px); pointer-events: none; z-index: 0;
+  }
+  .veil {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: linear-gradient(180deg, rgba(13,11,12,.42) 0%, rgba(13,11,12,.78) 45%, var(--bg) 92%);
+  }
+  .wrap { position: relative; z-index: 2; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+  /* ── top bar ───────────────────────────────────────────── */
+  .top { display: flex; align-items: center; gap: 18px; padding: 24px 0; flex-wrap: wrap; }
+  .wordmark {
+    font-family: var(--sign); font-size: 16px; letter-spacing: -.02em; text-transform: uppercase;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .wordmark-logo {
+    width: 24px; height: 24px; border-radius: 5px; border: 1px solid var(--edge); vertical-align: middle;
+  }
+  .wordmark span { color: var(--faint); }
+  .top__links { display: flex; gap: 18px; margin-left: 10px; flex-wrap: wrap; }
+  .top__links a { font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: .05em; }
+  .top__links a:hover { color: var(--ink); }
+  .top__right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+
+  .btn {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+    border: 1px solid var(--edge); padding: 8px 14px; color: var(--ink);
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    transition: all .15s ease;
+  }
+  .btn:hover { background: rgba(255, 246, 234, .09); border-color: var(--ink); }
+  .btn--go { background: var(--ink); color: #12100F; border-color: var(--ink); font-weight: 700; }
+  .btn--go:hover { background: #FFFFFF; color: #0D0B0C; }
+  .btn--sileo { background: #FF9500; color: #0D0B0C; border-color: #FF9500; font-weight: 700; }
+  .btn--sileo:hover { background: #FFA826; border-color: #FFA826; }
+  .btn--zebra { background: #1F1B1E; border-color: var(--edge); color: var(--ink); }
+  .btn--sm { padding: 6px 12px; font-size: 10.5px; }
+  .btn--quiet { color: var(--dim); }
+
+  .btn-icon { width: 14px; height: 14px; display: inline-block; vertical-align: middle; }
+
+  /* ── hero ──────────────────────────────────────────────── */
+  .hero { padding: 30px 0 44px; border-top: 1px solid var(--edge-soft); }
+  .hero__tag {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .24em; text-transform: uppercase;
+    color: var(--tint-orange); display: flex; align-items: center; gap: 8px;
+  }
+  .hero__tag::before {
+    content: ""; display: inline-block; width: 6px; height: 6px; background: var(--tint-orange); border-radius: 50%;
+  }
+  .hero h1 {
+    font-family: var(--sign); font-size: clamp(38px, 7.8vw, 86px); line-height: .93;
+    letter-spacing: -.035em; text-transform: uppercase; margin: 18px 0 0; max-width: 17ch;
+  }
+  .hero__lede { max-width: 62ch; color: var(--dim); font-size: 15.5px; line-height: 1.68; margin: 22px 0 0; }
+
+  .stats { display: flex; gap: 36px; margin: 34px 0 0; flex-wrap: wrap; }
+  .stat { border-left: 2px solid var(--edge); padding-left: 14px; }
+  .stat__n { font-family: var(--sign); font-size: 28px; letter-spacing: -.02em; display: block; color: var(--ink); }
+  .stat__k {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--faint); display: block; margin-top: 4px;
+  }
+
+  /* ── repository quick add bar ───────────────────────────── */
+  .quick-add {
+    margin: 38px 0 0; padding: 22px; background: var(--panel);
+    border: 1px solid var(--edge); display: grid; grid-template-columns: 1fr auto;
+    gap: 20px; align-items: center;
+  }
+  .quick-add__info h3 {
+    font-family: var(--sign); font-size: 18px; letter-spacing: -.02em; text-transform: uppercase; margin: 0 0 6px;
+  }
+  .quick-add__info p { font-size: 13px; color: var(--dim); margin: 0 0 14px; line-height: 1.5; }
+  .quick-add__url-box {
+    display: flex; align-items: center; gap: 8px; background: #0E0C0D;
+    border: 1px solid var(--edge); padding: 5px 6px 5px 12px;
+  }
+  .quick-add__url-input {
+    background: transparent; border: 0; outline: none; font-family: var(--mono);
+    font-size: 12px; color: var(--ink); flex: 1; min-width: 220px;
+  }
+  .quick-add__actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  /* ── tierplate section headers (ranking style) ──────────── */
+  .shelf { margin: 54px 0 20px; }
+  .shelf__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .tierplate {
+    display: inline-flex; align-items: baseline; gap: 11px; padding: 7px 14px 7px 12px;
+    background: rgba(255, 246, 234, .06);
+    border-left: 3px solid var(--tint, var(--tint-orange));
+  }
+  .tierplate b { font-family: var(--sign); font-size: 15px; letter-spacing: -.01em; text-transform: uppercase; color: var(--tint, var(--tint-orange)); }
+  .tierplate i { font-family: var(--mono); font-style: normal; font-size: 10px; letter-spacing: .16em; color: var(--faint); text-transform: uppercase; }
+  .shelf__hint { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
+  .shelf__board {
+    height: 0; border-top: 1px solid rgba(255, 246, 234, .18);
+    box-shadow: 0 1px 0 rgba(0,0,0,.9), 0 10px 22px -12px rgba(0,0,0,.9);
+    margin: 8px 0 28px;
+  }
+
+  /* ── tweak cards ────────────────────────────────────────── */
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+
+  .tweak-card {
+    background: var(--panel); border: 1px solid var(--edge); padding: 24px;
+    display: flex; flex-direction: column; position: relative;
+    transition: transform .22s cubic-bezier(.2,.7,.25,1), border-color .2s ease;
+  }
+  .tweak-card:hover { transform: translateY(-6px) rotate(-0.5deg); border-color: rgba(255, 246, 234, .35); }
+  .tweak-card__head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+  .tweak-card__badges { display: flex; gap: 6px; flex-wrap: wrap; }
+  .badge {
+    font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
+    padding: 3px 7px; border: 1px solid var(--edge); color: var(--dim); border-radius: 2px;
+  }
+  .badge--highlight { border-color: var(--tint-orange); color: var(--tint-orange); }
+  .badge--green { border-color: var(--tint-green); color: var(--tint-green); }
+
+  .tweak-card h2 {
+    font-family: var(--sign); font-size: 32px; letter-spacing: -.03em; text-transform: uppercase; margin: 0 0 6px;
+  }
+  .tweak-card__subtitle {
+    font-family: var(--mono); font-size: 11.5px; color: var(--tint-orange); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 14px;
+  }
+  .tweak-card__desc { font-size: 13.5px; color: var(--dim); line-height: 1.6; margin: 0 0 20px; flex: 1; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 22px; }
+  .chip {
+    font-family: var(--mono); font-size: 9.5px; letter-spacing: .08em; color: var(--dim);
+    background: rgba(255, 246, 234, .04); border: 1px solid var(--edge-soft); padding: 4px 8px;
+  }
+
+  .tweak-card__actions { display: flex; gap: 9px; flex-wrap: wrap; padding-top: 18px; border-top: 1px solid var(--edge-soft); }
+
+  .tweak-card--dashed {
+    border-style: dashed; background: transparent; justify-content: center; align-items: center; text-align: center;
+    padding: 40px 20px; min-height: 280px;
+  }
+  .tweak-card--dashed h3 { font-family: var(--sign); font-size: 18px; text-transform: uppercase; color: var(--faint); margin: 0 0 8px; }
+  .tweak-card--dashed p { font-family: var(--mono); font-size: 11px; color: var(--faint); letter-spacing: .1em; max-width: 28ch; margin: 0; line-height: 1.6; }
+
+  /* ── guide section ──────────────────────────────────────── */
+  .guide-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 8px; }
+  .guide-step {
+    background: var(--panel); border: 1px solid var(--edge-soft); padding: 20px;
+    display: flex; flex-direction: column;
+  }
+  .guide-step__num {
+    font-family: var(--sign); font-size: 24px; color: var(--tint-orange); margin-bottom: 12px; letter-spacing: -.02em;
+  }
+  .guide-step h4 {
+    font-family: var(--mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; margin: 0 0 8px;
+  }
+  .guide-step p { font-size: 13px; color: var(--dim); line-height: 1.55; margin: 0; }
+
+  /* ── modal ─────────────────────────────────────────────── */
+  .scrim {
+    position: fixed; inset: 0; z-index: 50; background: rgba(5,4,5,.84); backdrop-filter: blur(8px);
+    display: none; align-items: flex-start; justify-content: center; padding: 30px 16px; overflow-y: auto;
+  }
+  .scrim[data-on="1"] { display: flex; }
+  .modal {
+    width: 100%; max-width: 780px; background: var(--panel); border: 1px solid var(--edge);
+    animation: rise .2s cubic-bezier(.2,.7,.25,1); box-shadow: 0 24px 48px -12px rgba(0,0,0,.9);
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .modal__bar {
+    display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--edge);
+  }
+  .modal__k { font-family: var(--mono); font-size: 10px; letter-spacing: .24em; text-transform: uppercase; color: var(--faint); }
+  .modal__x { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+  .modal__x:hover { color: var(--ink); }
+  .modal__body { padding: 24px; }
+
+  .modal-tabs { display: flex; gap: 8px; border-bottom: 1px solid var(--edge-soft); margin-bottom: 20px; }
+  .modal-tab {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+    padding: 8px 12px; color: var(--faint); border-bottom: 2px solid transparent;
+  }
+  .modal-tab:hover { color: var(--dim); }
+  .modal-tab[data-on="1"] { color: var(--ink); border-bottom-color: var(--ink); }
+
+  .modal-pane { display: none; }
+  .modal-pane[data-on="1"] { display: block; }
+
+  .modal h2 { font-family: var(--sign); font-size: 26px; text-transform: uppercase; letter-spacing: -.02em; margin: 0 0 8px; }
+  .modal p { font-size: 13.5px; line-height: 1.65; color: #C4BCB3; }
+
+  .spec-table { width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 12.5px; }
+  .spec-table td { padding: 9px 12px; border: 1px solid var(--edge-soft); }
+  .spec-table td:first-child { font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); width: 140px; background: rgba(255,246,234,.02); }
+  .spec-table td:last-child { color: var(--ink); }
+
+  /* ── footer ────────────────────────────────────────────── */
+  .foot {
+    margin: 80px 0 0; padding: 32px 0 0; border-top: 1px solid var(--edge);
+    display: grid; grid-template-columns: 1.3fr 1fr; gap: 32px;
+  }
+  .foot h2 { font-family: var(--sign); font-size: 20px; text-transform: uppercase; letter-spacing: -.02em; margin: 0 0 10px; }
+  .foot p { font-size: 13.5px; line-height: 1.68; color: var(--dim); margin: 0; }
+  .foot__links { display: flex; flex-direction: column; gap: 9px; }
+  .foot__links a { font-family: var(--mono); font-size: 12px; color: var(--dim); display: flex; gap: 14px; }
+  .foot__links a span { color: var(--faint); font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; width: 78px; flex: none; padding-top: 2px; }
+  .foot__links a:hover { color: var(--ink); }
+  .fineprint { font-family: var(--mono); font-size: 10px; color: var(--faint); letter-spacing: .06em; margin: 26px 0 0; line-height: 1.8; }
+
+  /* Toast notification */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 100;
+    background: var(--ink); color: #0D0B0C; font-family: var(--mono); font-size: 11px;
+    letter-spacing: .1em; text-transform: uppercase; font-weight: 700;
+    padding: 10px 16px; border: 1px solid #fff; box-shadow: 0 12px 24px rgba(0,0,0,.6);
+    transform: translateY(60px); opacity: 0; transition: all .2s cubic-bezier(.2,.7,.25,1); pointer-events: none;
+  }
+  .toast.is-show { transform: translateY(0); opacity: 1; }
+
+  @media (max-width: 780px) {
+    .quick-add { grid-template-columns: 1fr; }
+    .foot { grid-template-columns: 1fr; }
+    .top__right { width: 100%; margin-left: 0; justify-content: space-between; }
+    .stats { gap: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="plate"></div>
+<div class="veil"></div>
+
+<div class="wrap">
+  <!-- Top Navigation Bar -->
+  <header class="top">
+    <div class="wordmark">
+      <img src="CydiaIcon.png" alt="Nishi Logo" class="wordmark-logo">
+      Nishi <span>/ REPO</span>
+    </div>
+    <nav class="top__links">
+      <a href="#tweaks">Tweaks</a>
+      <a href="#guide">How to Add</a>
+      <a href="https://github.com/enafrosty/Nishi" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://heyfrosty.space" target="_blank" rel="noopener">frosty</a>
+    </nav>
+    <div class="top__right">
+      <button class="btn btn--quiet btn--sm" id="sfxBtn" title="Toggle audio effects">🔊 SFX: ON</button>
+      <a class="btn btn--sileo btn--sm js-sileo-link" id="topSileoBtn" href="sileo://source/https://enafrosty.github.io/Nishi/">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        Add to Sileo
+      </a>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero__tag">Dopamine Rootless APT Repository</div>
+    <h1>Rootless iOS Tweaks for Dopamine</h1>
+    <p class="hero__lede">
+      Nishi is the official jailbreak tweak repository crafted by frosty. Built exclusively for rootless environments (<code style="font-family:var(--mono);color:var(--ink)">/var/jb</code>), strictly compliant with Apple's Pointer Authentication (PAC arm64e on A12/A13) and Page Protection Layer (PPL).
+    </p>
+
+    <div class="stats">
+      <div class="stat">
+        <span class="stat__n">01</span>
+        <span class="stat__k">Tweak Hosted</span>
+      </div>
+      <div class="stat">
+        <span class="stat__n">iOS 15+</span>
+        <span class="stat__k">Compatibility</span>
+      </div>
+      <div class="stat">
+        <span class="stat__n">arm64e</span>
+        <span class="stat__k">Hardware PAC Safe</span>
+      </div>
+      <div class="stat">
+        <span class="stat__n">Rootless</span>
+        <span class="stat__k">/var/jb Scheme</span>
+      </div>
+    </div>
+
+    <!-- Quick Add Repository Bar -->
+    <div class="quick-add">
+      <div class="quick-add__info">
+        <h3>Direct Sileo & Zebra Quick Add</h3>
+        <p>Tap below to add this repository directly to your package manager, or copy the URL manually.</p>
+        <div class="quick-add__url-box">
+          <input type="text" class="quick-add__url-input" id="repoUrlInput" readonly value="https://enafrosty.github.io/Nishi/">
+          <button class="btn btn--sm" id="copyUrlBtn">Copy</button>
+        </div>
+      </div>
+      <div class="quick-add__actions">
+        <a class="btn btn--sileo js-sileo-link" id="mainSileoBtn" href="sileo://source/https://enafrosty.github.io/Nishi/">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          Add to Sileo
+        </a>
+        <a class="btn btn--zebra js-zebra-link" id="mainZebraBtn" href="zbra://sources/add/https://enafrosty.github.io/Nishi/">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16v16H4z"/></svg>
+          Add to Zebra
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tweaks Showcase -->
+  <section class="shelf" id="tweaks">
+    <div class="shelf__head">
+      <div class="tierplate">
+        <b>Hosted Tweaks</b>
+        <i>Production Releases</i>
+      </div>
+      <span class="shelf__hint">1 Package Active</span>
+    </div>
+    <div class="shelf__board"></div>
+
+    <div class="grid">
+      <!-- Yuna Card -->
+      <article class="tweak-card">
+        <div class="tweak-card__head">
+          <div class="tweak-card__badges">
+            <span class="badge badge--highlight">FLAGSHIP</span>
+            <span class="badge badge--green">v1.0.0</span>
+            <span class="badge">ROOTLESS</span>
+          </div>
+          <span class="badge" style="font-family:var(--mono)">arm64 & arm64e</span>
+        </div>
+
+        <h2>YUNA</h2>
+        <div class="tweak-card__subtitle">Universal Keyboard Clipboard Manager</div>
+        <p class="tweak-card__desc">
+          Embeds a native clipboard trigger into <code style="font-family:var(--mono);color:var(--ink)">UIKeyboardDockView</code>. Automatically captures text, rich URLs, images (with Jetsam-safe downsampling), and file links. Features priority snippet pinning and 1 to 4 customizable rows.
+        </p>
+
+        <div class="chips">
+          <span class="chip">UIKeyboardDockView</span>
+          <span class="chip">Pinning System</span>
+          <span class="chip">1-4 Rows Layout</span>
+          <span class="chip">Images & Files</span>
+          <span class="chip">ElleKit PAC Safe</span>
+          <span class="chip">Sileo Depiction</span>
+        </div>
+
+        <div class="tweak-card__actions">
+          <button class="btn btn--go btn--sm" id="openYunaModalBtn">Details & Sileo Depiction</button>
+          <a class="btn btn--sileo btn--sm" id="yunaSileoBtn" href="sileo://package/com.frosty.yuna">Install in Sileo</a>
+          <a class="btn btn--quiet btn--sm" href="debs/com.frosty.yuna_1.0.0_iphoneos-arm64.deb" download>Download .deb</a>
+        </div>
+      </article>
+
+      <!-- Roadmap / Coming Soon Card -->
+      <article class="tweak-card tweak-card--dashed">
+        <h3>Future Tweaks Pipeline</h3>
+        <p>Additional utilities and rootless tweaks for Dopamine iOS 15–16 are under active development.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- How to Add Guide -->
+  <section class="shelf" id="guide">
+    <div class="shelf__head">
+      <div class="tierplate" style="--tint:var(--tint-green)">
+        <b style="color:var(--tint-green)">Repository Setup</b>
+        <i>Quick Instructions</i>
+      </div>
+      <span class="shelf__hint">Step by Step</span>
+    </div>
+    <div class="shelf__board"></div>
+
+    <div class="guide-grid">
+      <div class="guide-step">
+        <span class="guide-step__num">01</span>
+        <h4>Open Package Manager</h4>
+        <p>Launch <strong>Sileo</strong> or <strong>Zebra</strong> on your jailbroken iPhone or iPad running Dopamine.</p>
+      </div>
+
+      <div class="guide-step">
+        <span class="guide-step__num">02</span>
+        <h4>Add Source</h4>
+        <p>Go to the <strong>Sources</strong> tab, tap the <strong>+</strong> button in the upper right corner.</p>
+      </div>
+
+      <div class="guide-step">
+        <span class="guide-step__num">03</span>
+        <h4>Enter Repository URL</h4>
+        <p>Paste the repository URL (<code style="font-family:var(--mono);color:var(--ink)">https://enafrosty.github.io/Nishi/</code>) or tap the "Add to Sileo" button directly from Safari on your device.</p>
+      </div>
+
+      <div class="guide-step">
+        <span class="guide-step__num">04</span>
+        <h4>Install Yuna</h4>
+        <p>Wait for repository sources to reload, search for <strong>Yuna</strong>, and tap <strong>Get</strong> to install.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="foot">
+    <div>
+      <h2>NISHI REPOSITORY</h2>
+      <p>
+        Maintained by frosty. Engineered for rootless Dopamine with hardware PAC compliance on arm64e (A12/A13) and arm64.
+      </p>
+      <p class="fineprint">
+        THEOS_PACKAGE_SCHEME=rootless • TARGET=iphone:clang:latest:15.0 • Powered by GitHub Pages & Actions.
+      </p>
+    </div>
+    <div class="foot__links">
+      <a href="https://heyfrosty.space" target="_blank" rel="noopener"><span>website</span>heyfrosty.space</a>
+      <a href="https://github.com/enafrosty" target="_blank" rel="noopener"><span>github</span>github.com/enafrosty</a>
+      <a href="https://ranking.heyfrosty.space" target="_blank" rel="noopener"><span>database</span>ranking.heyfrosty.space</a>
+      <a href="mailto:iyad@heyfrosty.space"><span>email</span>iyad@heyfrosty.space</a>
+    </div>
+  </footer>
+</div>
+
+<!-- Modal: Yuna Details & Sileo Depiction -->
+<div class="scrim" id="modalScrim">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal__bar">
+      <span class="modal__k" id="modalK">PACKAGE SPECIFICATION / YUNA</span>
+      <button class="modal__x" id="modalCloseBtn">Close [ESC]</button>
+    </div>
+    <div class="modal__body">
+      <h2 id="modalTitle">YUNA (v1.0.0)</h2>
+      <p style="color:var(--tint-orange);font-family:var(--mono);font-size:12px;margin-top:0">com.frosty.yuna • Section: Tweaks</p>
+
+      <div class="modal-tabs">
+        <button class="modal-tab" data-target="pane-overview" data-on="1">Overview</button>
+        <button class="modal-tab" data-target="pane-specs" data-on="0">Specs & PAC</button>
+        <button class="modal-tab" data-target="pane-depiction" data-on="0">Sileo JSON</button>
+        <button class="modal-tab" data-target="pane-changelog" data-on="0">Changelog</button>
+      </div>
+
+      <!-- Tab 1: Overview -->
+      <div class="modal-pane" id="pane-overview" data-on="1">
+        <p>
+          <strong>Yuna</strong> solves the problem of clumsy clipboard management on iOS by embedding a dedicated trigger button straight into the native keyboard dock (<code style="font-family:var(--mono)">UIKeyboardDockView</code>).
+        </p>
+        <table class="spec-table">
+          <tr><td>Dock Integration</td><td>Dedicated button beside dictation or emoji with configurable position</td></tr>
+          <tr><td>Content Types</td><td>Plain text, rich URLs, images (PNG/JPEG with downsampling), file URLs</td></tr>
+          <tr><td>Pinning System</td><td>Pin vital snippets to top; pinned items are never pruned on eviction</td></tr>
+          <tr><td>Row Layouts</td><td>1, 2, 3, or 4 rows of cards dynamically computed for keyboard space</td></tr>
+          <tr><td>Direct Insertion</td><td>Inserts text directly into active responder via UIKeyboardImpl</td></tr>
+          <tr><td>Daemon Process</td><td>SpringBoard pasteboard listener daemon (YunaServer) with change-count throttling</td></tr>
+        </table>
+        <div style="display:flex;gap:10px;margin-top:20px">
+          <a class="btn btn--sileo btn--sm" href="sileo://package/com.frosty.yuna">Open in Sileo</a>
+          <a class="btn btn--go btn--sm" href="debs/com.frosty.yuna_1.0.0_iphoneos-arm64.deb" download>Download .deb</a>
+        </div>
+      </div>
+
+      <!-- Tab 2: Specs & PAC -->
+      <div class="modal-pane" id="pane-specs" data-on="0">
+        <table class="spec-table">
+          <tr><td>Target Platform</td><td>iOS 15.0 – 16.x+ (Rootless)</td></tr>
+          <tr><td>Architectures</td><td>arm64 & arm64e (Dual-slice fat binary)</td></tr>
+          <tr><td>PAC Compliance</td><td>Trampoline hooks via ElleKit (zero naked vtable pointer swaps)</td></tr>
+          <tr><td>Rootless Prefix</td><td>/var/jb (JBROOT_PATH)</td></tr>
+          <tr><td>Preferences Path</td><td>/var/mobile/Library/Preferences/com.frosty.yuna.plist</td></tr>
+          <tr><td>History Storage</td><td>/var/jb/Library/Application Support/Yuna/history.plist</td></tr>
+          <tr><td>Dependencies</td><td>mobilesubstrate (&gt;= 0.9.5000), ellekit, preferenceloader</td></tr>
+        </table>
+      </div>
+
+      <!-- Tab 3: Sileo JSON -->
+      <div class="modal-pane" id="pane-depiction" data-on="0">
+        <p>Native Sileo JSON Depiction schema preview (minVersion 0.4):</p>
+        <pre style="background:#0E0C0D;padding:12px;border:1px solid var(--edge);font-family:var(--mono);font-size:11px;color:var(--dim);overflow-x:auto"><code>{
+  "minVersion": "0.4",
+  "tintColor": "#FF9500",
+  "tabs": [
+    {
+      "tabname": "Details",
+      "views": [
+        { "class": "DepictionHeaderView", "title": "Yuna", "useBoldText": true },
+        { "class": "DepictionSubheaderView", "title": "Universal Keyboard Clipboard Manager" },
+        { "class": "DepictionMarkdownView", "markdown": "..." }
+      ]
+    }
+  ]
+}</code></pre>
+        <p style="margin-top:12px"><a href="Tweaks/Yuna/depiction/depiction.json" target="_blank" style="color:var(--tint-orange);text-decoration:underline;font-family:var(--mono);font-size:11px">View raw depiction.json &rarr;</a></p>
+      </div>
+
+      <!-- Tab 4: Changelog -->
+      <div class="modal-pane" id="pane-changelog" data-on="0">
+        <p><strong>Version 1.0.0 (Initial Release in Nishi Repository)</strong></p>
+        <ul style="font-size:13px;line-height:1.7;color:var(--dim);padding-left:20px">
+          <li>Initial production release of Yuna in the Nishi repository.</li>
+          <li>Embedded universal clipboard trigger in UIKeyboardDockView.</li>
+          <li>Full support for text, rich URLs, and memory-safe images.</li>
+          <li>Snippet pinning system with eviction protection.</li>
+          <li>Configurable 1, 2, 3, or 4 row layout geometry.</li>
+          <li>Native Sileo JSON depiction and rootless Dopamine packaging.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">Copied to clipboard!</div>
+
+<script>
+(function() {
+  "use strict";
+
+  // Audio synthesizer (inspired by ranking.heyfrosty.space)
+  let sfxMuted = localStorage.getItem("nishi_sfx_muted") === "1";
+  let audioCtx = null;
+
+  function getAudioCtx() {
+    if (!audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) audioCtx = new AC();
+    }
+    if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+    return audioCtx;
+  }
+
+  function playSFX(type) {
+    if (sfxMuted) return;
+    try {
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+
+      if (type === "click") {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(750, now);
+        osc.frequency.exponentialRampToValueAtTime(140, now + 0.035);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.035);
+      } else if (type === "chime") {
+        const freqs = [587.33, 880, 1174.66];
+        freqs.forEach((f, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(f, now + idx * 0.03);
+          osc.frequency.exponentialRampToValueAtTime(f * 1.05, now + idx * 0.03 + 0.16);
+          gain.gain.setValueAtTime(0.07 / (idx + 1), now + idx * 0.03);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.03 + 0.22);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + idx * 0.03);
+          osc.stop(now + idx * 0.03 + 0.22);
+        });
+      }
+    } catch(e) {}
+  }
+
+  function updateSfxBtn() {
+    const btn = document.getElementById("sfxBtn");
+    if (btn) {
+      btn.textContent = sfxMuted ? "🔇 SFX: OFF" : "🔊 SFX: ON";
+      btn.style.opacity = sfxMuted ? "0.6" : "1";
+    }
+  }
+
+  document.getElementById("sfxBtn").addEventListener("click", () => {
+    sfxMuted = !sfxMuted;
+    localStorage.setItem("nishi_sfx_muted", sfxMuted ? "1" : "0");
+    updateSfxBtn();
+    if (!sfxMuted) playSFX("click");
+  });
+  updateSfxBtn();
+
+  // Compute dynamic repository URL
+  function getRepoURL() {
+    let url = window.location.href.split("#")[0].split("?")[0];
+    if (url.endsWith("index.html")) {
+      url = url.substring(0, url.lastIndexOf("index.html"));
+    }
+    if (!url.endsWith("/")) url += "/";
+    // Fallback if local file protocol
+    if (url.startsWith("file:")) {
+      return "https://enafrosty.github.io/Nishi/";
+    }
+    return url;
+  }
+
+  const repoUrl = getRepoURL();
+  const repoInput = document.getElementById("repoUrlInput");
+  if (repoInput) repoInput.value = repoUrl;
+
+  // Update native Sileo and Zebra deep links with unencoded repo URL
+  const sileoLink = "sileo://source/" + repoUrl;
+  const zebraLink = "zbra://sources/add/" + repoUrl;
+
+  document.querySelectorAll(".js-sileo-link").forEach(el => {
+    el.setAttribute("href", sileoLink);
+    el.addEventListener("click", () => playSFX("click"));
+  });
+  document.querySelectorAll(".js-zebra-link").forEach(el => {
+    el.setAttribute("href", zebraLink);
+    el.addEventListener("click", () => playSFX("click"));
+  });
+
+  function showToast(msg) {
+    const toast = document.getElementById("toast");
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.classList.add("is-show");
+    setTimeout(() => toast.classList.remove("is-show"), 2200);
+  }
+
+  function copyRepoURL() {
+    playSFX("chime");
+    navigator.clipboard.writeText(repoUrl).then(() => {
+      showToast("Repository URL copied!");
+    }).catch(() => {
+      repoInput.select();
+      document.execCommand("copy");
+      showToast("Repository URL copied!");
+    });
+  }
+
+  const copyBtn = document.getElementById("copyUrlBtn");
+  if (copyBtn) copyBtn.addEventListener("click", copyRepoURL);
+
+  // Modal interactions
+  const modalScrim = document.getElementById("modalScrim");
+  const openModalBtn = document.getElementById("openYunaModalBtn");
+  const closeModalBtn = document.getElementById("modalCloseBtn");
+
+  function openModal() {
+    playSFX("chime");
+    modalScrim.dataset.on = "1";
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeModal() {
+    playSFX("click");
+    modalScrim.dataset.on = "0";
+    document.body.style.overflow = "";
+  }
+
+  if (openModalBtn) openModalBtn.addEventListener("click", openModal);
+  if (closeModalBtn) closeModalBtn.addEventListener("click", closeModal);
+  modalScrim.addEventListener("click", (e) => {
+    if (e.target === modalScrim) closeModal();
+  });
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modalScrim.dataset.on === "1") closeModal();
+  });
+
+  // Modal Tabs
+  const modalTabs = document.querySelectorAll(".modal-tab");
+  const modalPanes = document.querySelectorAll(".modal-pane");
+
+  modalTabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      playSFX("click");
+      modalTabs.forEach(t => t.dataset.on = "0");
+      modalPanes.forEach(p => p.dataset.on = "0");
+      tab.dataset.on = "1";
+      const targetPane = document.getElementById(tab.dataset.target);
+      if (targetPane) targetPane.dataset.on = "1";
+    });
+  });
+
+})();
+</script>
+</body>
+</html>

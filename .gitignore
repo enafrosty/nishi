@@ -1,0 +1,16 @@
+# Theos build artifacts
+.theos/
+packages/
+obj/
+*.deb
+!debs/*.deb
+
+# Editor & OS files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs & crash reports
+*.log
+*.ips

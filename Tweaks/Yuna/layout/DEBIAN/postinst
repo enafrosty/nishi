@@ -1,0 +1,22 @@
+#!/bin/sh
+set -e
+
+# Target rootless path for Yuna storage
+STORAGE_DIR="/var/jb/Library/Application Support/Yuna"
+IMAGES_DIR="$STORAGE_DIR/Images"
+
+if [ ! -d "$IMAGES_DIR" ]; then
+    mkdir -p "$IMAGES_DIR"
+fi
+
+# Fix ownership and permissions for rootless mobile user
+chown -R 501:501 "$STORAGE_DIR" || true
+chmod 777 "$STORAGE_DIR" || true
+chmod 777 "$IMAGES_DIR" || true
+
+# Notify system of tweak installation
+if [ -x "/var/jb/usr/bin/sbreload" ]; then
+    /var/jb/usr/bin/sbreload || true
+fi
+
+exit 0
