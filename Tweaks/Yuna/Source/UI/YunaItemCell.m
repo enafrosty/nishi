@@ -91,8 +91,8 @@
     _cardBackground.frame = bounds;
     
     CGFloat padding = 8.0;
-    CGFloat pinSize = 22.0;
-    _pinButton.frame = CGRectMake(bounds.size.width - pinSize - padding, (bounds.size.height - pinSize) / 2.0, pinSize, pinSize);
+    CGFloat pinWidth = 36.0;
+    _pinButton.frame = CGRectMake(bounds.size.width - pinWidth, 0, pinWidth, bounds.size.height);
     
     CGFloat leftOffset = padding;
     CGFloat rightLimit = _pinButton.frame.origin.x - 4.0;

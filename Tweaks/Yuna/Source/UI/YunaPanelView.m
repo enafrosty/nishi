@@ -126,7 +126,9 @@ typedef NS_ENUM(NSInteger, YunaFilterTab) {
     
     // Long-press gesture for context actions
     UILongPressGestureRecognizer *lp = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleLongPress:)];
-    lp.minimumPressDuration = 0.4;
+    lp.minimumPressDuration = 0.45;
+    lp.delaysTouchesBegan = NO;
+    lp.cancelsTouchesInView = NO;
     [_collectionView addGestureRecognizer:lp];
     
     // Empty state label
@@ -244,19 +246,28 @@ typedef NS_ENUM(NSInteger, YunaFilterTab) {
     if (item.type == YunaItemTypeText || item.type == YunaItemTypeURL) {
         NSString *textToInsert = item.text ?: @"";
         
-        // Attempt direct insertion via UIKeyboardImpl (runtime resolution to avoid private linker symbols)
+        // 1. Always sync to system pasteboard first so snippet is immediately pasteable anywhere
+        [[UIPasteboard generalPasteboard] setString:textToInsert];
+        
+        // 2. Direct insertion via UIKeyboardImpl or its active text delegate
         Class kbClass = NSClassFromString(@"UIKeyboardImpl");
         id kb = nil;
         if (kbClass && [kbClass respondsToSelector:@selector(activeInstance)]) {
             kb = [kbClass performSelector:@selector(activeInstance)];
         }
-        if (kb && [kb respondsToSelector:@selector(insertText:)]) {
-            [kb performSelector:@selector(insertText:) withObject:textToInsert];
-            return;
+        if (kb) {
+            if ([kb respondsToSelector:@selector(insertText:)]) {
+                [kb performSelector:@selector(insertText:) withObject:textToInsert];
+                return;
+            }
+            if ([kb respondsToSelector:@selector(delegate)]) {
+                id del = [kb performSelector:@selector(delegate)];
+                if (del && [del respondsToSelector:@selector(insertText:)]) {
+                    [del performSelector:@selector(insertText:) withObject:textToInsert];
+                    return;
+                }
+            }
         }
-        
-        // Fallback to pasteboard
-        [[UIPasteboard generalPasteboard] setString:textToInsert];
     } else if (item.type == YunaItemTypeImage) {
         UIImage *img = [item loadImage];
         if (img) {
@@ -376,12 +387,20 @@ typedef NS_ENUM(NSInteger, YunaFilterTab) {
 }
 
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
-    // Absorb touches so they do not propagate up to keyboard keys or host views
+    [super touchesBegan:touches withEvent:event];
 }
 
-- (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {}
-- (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {}
-- (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {}
+- (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    [super touchesMoved:touches withEvent:event];
+}
+
+- (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    [super touchesEnded:touches withEvent:event];
+}
+
+- (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    [super touchesCancelled:touches withEvent:event];
+}
 
 #pragma mark - Presentation / Dismissal
 

@@ -70,7 +70,7 @@
         {
           "class": "DepictionTableTextView",
           "title": "Version",
-          "text": "1.0.2"
+          "text": "1.0.3"
         },
         {
           "class": "DepictionTableTextView",
@@ -88,6 +88,17 @@
     {
       "tabname": "Changelog",
       "views": [
+        {
+          "class": "DepictionHeaderView",
+          "title": "Version 1.0.3"
+        },
+        {
+          "class": "DepictionMarkdownView",
+          "markdown": "- **Interactive Tap & Paste Fix**: Resolved touch hit-testing in UIKeyboardLayoutStar and YunaPanelView, enabling instantaneous cell tap-to-paste, comfortable 36pt pin button hit targets, and dual direct-injection/clipboard syncing."
+        },
+        {
+          "class": "DepictionSeparatorView"
+        },
         {
           "class": "DepictionHeaderView",
           "title": "Version 1.0.2"

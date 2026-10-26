@@ -111,7 +111,29 @@ static void yna_recordPasteboardItem(UIPasteboard *pb) {
     if (kYunaActivePanel && kYunaActivePanel.superview && !kYunaActivePanel.hidden && kYunaActivePanel.alpha > 0.05) {
         CGPoint pInPanel = [self convertPoint:point toView:kYunaActivePanel];
         if ([kYunaActivePanel pointInside:pInPanel withEvent:event]) {
-            return nil; // Prevent touches in Yuna bounds from reaching keyboard keys
+            // Forward hit-testing directly into Yuna panel and its interactive controls (cells, pin buttons, close button)
+            UIView *hit = [kYunaActivePanel hitTest:pInPanel withEvent:event];
+            return hit ?: kYunaActivePanel;
+        }
+    }
+    return %orig;
+}
+
+- (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer {
+    if (kYunaActivePanel && kYunaActivePanel.superview && !kYunaActivePanel.hidden && kYunaActivePanel.alpha > 0.05) {
+        CGPoint p = [gestureRecognizer locationInView:kYunaActivePanel];
+        if ([kYunaActivePanel pointInside:p withEvent:nil]) {
+            return NO; // Prevent keyboard gesture recognizers from stealing or cancelling Yuna touches
+        }
+    }
+    return %orig;
+}
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch {
+    if (kYunaActivePanel && kYunaActivePanel.superview && !kYunaActivePanel.hidden && kYunaActivePanel.alpha > 0.05) {
+        CGPoint p = [touch locationInView:kYunaActivePanel];
+        if ([kYunaActivePanel pointInside:p withEvent:nil]) {
+            return NO; // Prevent keyboard gesture recognizers from stealing or cancelling Yuna touches
         }
     }
     return %orig;
