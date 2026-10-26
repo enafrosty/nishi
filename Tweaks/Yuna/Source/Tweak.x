@@ -13,6 +13,23 @@ static const char kYunaDockButtonKey;
 static const char kYunaPanelViewKey;
 static const char kYunaPrefsTokenKey;
 
+static UIView *yna_extractDockItemView(id dockItem) {
+    if (!dockItem) return nil;
+    if ([dockItem respondsToSelector:@selector(button)]) {
+        id btn = [dockItem performSelector:@selector(button)];
+        if ([btn isKindOfClass:[UIView class]]) {
+            return (UIView *)btn;
+        }
+    }
+    if ([dockItem respondsToSelector:@selector(view)]) {
+        id v = [dockItem performSelector:@selector(view)];
+        if ([v isKindOfClass:[UIView class]]) {
+            return (UIView *)v;
+        }
+    }
+    return nil;
+}
+
 @interface UIKeyboardDockView (Yuna) <YunaDockButtonDelegate, YunaPanelViewDelegate>
 @property (nonatomic, strong, nullable) YunaDockButton *yunaDockButton;
 @property (nonatomic, strong, nullable) YunaPanelView *yunaPanelView;
@@ -113,50 +130,90 @@ static const char kYunaPrefsTokenKey;
     CGRect bounds = self.bounds;
     if (bounds.size.width <= 0 || bounds.size.height <= 0) return;
     
-    CGFloat btnW = 44.0;
-    CGFloat btnH = 44.0;
-    CGFloat yPos = (bounds.size.height - btnH) / 2.0;
-    CGFloat xPos = 0.0;
+    // Resolve left dock item view (language / globe switcher or emoji button)
+    UIView *leftBtn = nil;
+    if ([self respondsToSelector:@selector(leftDockItem)]) {
+        leftBtn = yna_extractDockItemView([self leftDockItem]);
+    }
     
+    // Resolve right dock item view (dictation microphone)
+    UIView *rightBtn = nil;
+    if ([self respondsToSelector:@selector(rightDockItem)]) {
+        rightBtn = yna_extractDockItemView([self rightDockItem]);
+    }
+    
+    // Search self.subviews for dock buttons if dockItems were not resolved
+    if (!leftBtn || !rightBtn) {
+        for (UIView *sub in self.subviews) {
+            if (sub == btn) continue;
+            if (![sub isKindOfClass:[UIButton class]] &&
+                ![NSStringFromClass([sub class]) containsString:@"Button"] &&
+                ![NSStringFromClass([sub class]) containsString:@"Item"]) {
+                continue;
+            }
+            if (!leftBtn || sub.frame.origin.x < leftBtn.frame.origin.x) {
+                leftBtn = sub;
+            }
+            if (!rightBtn || sub.frame.origin.x > rightBtn.frame.origin.x) {
+                rightBtn = sub;
+            }
+        }
+    }
+    
+    BOOL isLeftBtnValid = (leftBtn != nil && !leftBtn.hidden && leftBtn.frame.size.height > 5.0);
+    BOOL isRightBtnVisible = (rightBtn != nil && rightBtn != leftBtn && !rightBtn.hidden &&
+                              rightBtn.alpha > 0.05 && rightBtn.frame.size.width > 5.0 &&
+                              rightBtn.frame.origin.x > (bounds.size.width / 2.0));
+    
+    CGFloat btnW = (isLeftBtnValid && leftBtn.frame.size.width >= 32.0) ? leftBtn.frame.size.width : 44.0;
+    CGFloat btnH = (isLeftBtnValid && leftBtn.frame.size.height >= 32.0) ? leftBtn.frame.size.height : 44.0;
+    
+    // Vertically align directly with the language button switcher on the bottom dock row
+    CGFloat targetYCenter = 0.0;
+    if (isLeftBtnValid) {
+        targetYCenter = leftBtn.center.y;
+    } else if (isRightBtnVisible) {
+        targetYCenter = rightBtn.center.y;
+    } else {
+        CGFloat bottomMargin = 10.0;
+        if (@available(iOS 11.0, *)) {
+            if (self.safeAreaInsets.bottom > 0) {
+                bottomMargin = self.safeAreaInsets.bottom + 2.0;
+            }
+        }
+        targetYCenter = bounds.size.height - (btnH / 2.0) - bottomMargin;
+    }
+    
+    // Horizontally position on the right side of the keyboard or next to dictation
+    CGFloat targetXCenter = 0.0;
     switch (settings.dockPosition) {
         case YunaDockPositionNextToDictation: {
-            UIView *rightBtn = nil;
-            if ([self respondsToSelector:@selector(rightDockItem)]) {
-                UIKeyboardDockItem *rItem = [self rightDockItem];
-                if (rItem && [rItem respondsToSelector:@selector(button)]) {
-                    rightBtn = [rItem button];
-                }
-            }
-            if (rightBtn && rightBtn.frame.origin.x > 0 && !rightBtn.hidden) {
-                xPos = rightBtn.frame.origin.x - btnW - 6.0;
+            if (isRightBtnVisible) {
+                targetXCenter = rightBtn.frame.origin.x - (btnW / 2.0) - 6.0;
             } else {
-                xPos = bounds.size.width - btnW - 12.0;
+                // When dictation is disabled, take the right dock slot opposite the language switcher
+                CGFloat leftMargin = isLeftBtnValid ? leftBtn.center.x : (btnW / 2.0 + 14.0);
+                targetXCenter = bounds.size.width - leftMargin;
             }
             break;
         }
         case YunaDockPositionNextToEmoji: {
-            UIView *leftBtn = nil;
-            if ([self respondsToSelector:@selector(leftDockItem)]) {
-                UIKeyboardDockItem *lItem = [self leftDockItem];
-                if (lItem && [lItem respondsToSelector:@selector(button)]) {
-                    leftBtn = [lItem button];
-                }
-            }
-            if (leftBtn && leftBtn.frame.origin.x >= 0 && !leftBtn.hidden) {
-                xPos = CGRectGetMaxX(leftBtn.frame) + 6.0;
+            if (isLeftBtnValid) {
+                targetXCenter = CGRectGetMaxX(leftBtn.frame) + 6.0 + (btnW / 2.0);
             } else {
-                xPos = 12.0;
+                targetXCenter = 14.0 + (btnW / 2.0);
             }
             break;
         }
         case YunaDockPositionCenter:
         default: {
-            xPos = (bounds.size.width - btnW) / 2.0;
+            targetXCenter = bounds.size.width / 2.0;
             break;
         }
     }
     
-    btn.frame = CGRectMake(xPos, yPos, btnW, btnH);
+    btn.bounds = CGRectMake(0, 0, btnW, btnH);
+    btn.center = CGPointMake(targetXCenter, targetYCenter);
     [self bringSubviewToFront:btn];
 }
 

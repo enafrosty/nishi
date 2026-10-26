@@ -8,6 +8,7 @@ Section: Tweaks
 Depends: mobilesubstrate (>= 0.9.5000), ellekit, preferenceloader, firmware (>= 15.0)
 Tag: purpose::extension, role::developer, compatible::ios15, compatible::ios16
 SileoDepiction: https://nishi.heyfrosty.space/Tweaks/Yuna/depiction/depiction.json
+Icon: https://nishi.heyfrosty.space/Tweaks/Yuna/depiction/icon.png
 Filename: debs/com.frosty.yuna_1.0.0_iphoneos-arm64.deb
 Size: 2788
 MD5sum: c82fe0c346b8928592888afdac9cf552

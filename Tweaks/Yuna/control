@@ -8,4 +8,5 @@ Author: frosty
 Section: Tweaks
 Depends: mobilesubstrate (>= 0.9.5000), ellekit, preferenceloader, firmware (>= 15.0)
 Tag: purpose::extension, role::developer, compatible::ios15, compatible::ios16
+Icon: https://nishi.heyfrosty.space/Tweaks/Yuna/depiction/icon.png
 SileoDepiction: https://nishi.heyfrosty.space/Tweaks/Yuna/depiction/depiction.json

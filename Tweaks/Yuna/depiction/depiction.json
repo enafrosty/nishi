@@ -7,6 +7,14 @@
       "tabname": "Details",
       "views": [
         {
+          "class": "DepictionImageView",
+          "image": "https://nishi.heyfrosty.space/Tweaks/Yuna/depiction/banner.png",
+          "width": 600,
+          "height": 600,
+          "cornerRadius": 16,
+          "useBottomMargin": true
+        },
+        {
           "class": "DepictionHeaderView",
           "title": "Yuna",
           "useBoldText": true,

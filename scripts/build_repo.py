@@ -150,6 +150,8 @@ def build_repo():
             fields["MD5sum"] = hashes["md5"]
             fields["SHA1"] = hashes["sha1"]
             fields["SHA256"] = hashes["sha256"]
+            if fields.get("Package") == "com.frosty.yuna" and "Icon" not in fields:
+                fields["Icon"] = "https://nishi.heyfrosty.space/Tweaks/Yuna/depiction/icon.png"
             
             package_entries.append(format_control(fields))
             print(f"    + Added {fields.get('Package', deb)} ({fields.get('Version', '?')})")

@@ -170,11 +170,20 @@
   .badge--highlight { border-color: var(--tint-orange); color: var(--tint-orange); }
   .badge--green { border-color: var(--tint-green); color: var(--tint-green); }
 
+  .tweak-card__title-row {
+    display: flex; align-items: center; gap: 16px; margin: 0 0 12px;
+  }
+  .tweak-card__icon {
+    width: 64px; height: 64px; border-radius: 14px; object-fit: cover;
+    border: 1px solid var(--edge); box-shadow: 0 4px 14px rgba(0,0,0,.5);
+    background: #0E0C0D; flex-shrink: 0;
+  }
+
   .tweak-card h2 {
-    font-family: var(--sign); font-size: 32px; letter-spacing: -.03em; text-transform: uppercase; margin: 0 0 6px;
+    font-family: var(--sign); font-size: 32px; letter-spacing: -.03em; text-transform: uppercase; margin: 0 0 4px;
   }
   .tweak-card__subtitle {
-    font-family: var(--mono); font-size: 11.5px; color: var(--tint-orange); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 14px;
+    font-family: var(--mono); font-size: 11.5px; color: var(--tint-orange); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 0;
   }
   .tweak-card__desc { font-size: 13.5px; color: var(--dim); line-height: 1.6; margin: 0 0 20px; flex: 1; }
 
@@ -376,8 +385,13 @@
           <span class="badge" style="font-family:var(--mono)">arm64 & arm64e</span>
         </div>
 
-        <h2>YUNA</h2>
-        <div class="tweak-card__subtitle">Universal Keyboard Clipboard Manager</div>
+        <div class="tweak-card__title-row">
+          <img src="Tweaks/Yuna/depiction/icon.png" alt="Yuna Package Icon" class="tweak-card__icon">
+          <div>
+            <h2>YUNA</h2>
+            <div class="tweak-card__subtitle">Universal Keyboard Clipboard Manager</div>
+          </div>
+        </div>
         <p class="tweak-card__desc">
           Embeds a native clipboard trigger into <code style="font-family:var(--mono);color:var(--ink)">UIKeyboardDockView</code>. Automatically captures text, rich URLs, images (with Jetsam-safe downsampling), and file links. Features priority snippet pinning and 1 to 4 customizable rows.
         </p>
@@ -472,8 +486,13 @@
       <button class="modal__x" id="modalCloseBtn">Close [ESC]</button>
     </div>
     <div class="modal__body">
-      <h2 id="modalTitle">YUNA (v1.0.0)</h2>
-      <p style="color:var(--tint-orange);font-family:var(--mono);font-size:12px;margin-top:0">com.frosty.yuna • Section: Tweaks</p>
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+        <img src="Tweaks/Yuna/depiction/icon.png" alt="Yuna Icon" style="width:64px;height:64px;border-radius:14px;border:1px solid var(--edge);box-shadow:0 4px 12px rgba(0,0,0,.6);object-fit:cover;background:#0E0C0D;flex-shrink:0">
+        <div>
+          <h2 id="modalTitle" style="margin:0 0 4px">YUNA (v1.0.0)</h2>
+          <p style="color:var(--tint-orange);font-family:var(--mono);font-size:12px;margin:0">com.frosty.yuna • Section: Tweaks</p>
+        </div>
+      </div>
 
       <div class="modal-tabs">
         <button class="modal-tab" data-target="pane-overview" data-on="1">Overview</button>
@@ -484,6 +503,9 @@
 
       <!-- Tab 1: Overview -->
       <div class="modal-pane" id="pane-overview" data-on="1">
+        <div style="text-align:center;margin:0 0 18px;border:1px solid var(--edge-soft);border-radius:12px;overflow:hidden;background:#050405">
+          <img src="Tweaks/Yuna/depiction/banner.png" alt="Yuna Package Artwork" style="max-height:240px;width:auto;margin:0 auto;display:block">
+        </div>
         <p>
           <strong>Yuna</strong> solves the problem of clumsy clipboard management on iOS by embedding a dedicated trigger button straight into the native keyboard dock (<code style="font-family:var(--mono)">UIKeyboardDockView</code>).
         </p>

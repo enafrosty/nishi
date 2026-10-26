@@ -66,10 +66,13 @@ In `Tweak.x`, Yuna hooks `UIKeyboardDockView`:
 ```
 
 ### 2.2 Dock Button Positioning Algorithm
-When `layoutSubviews` fires, `yna_layoutDockButton` dynamically queries the layout frames of adjacent dock items:
-- **Next to Dictation (Default)**: Inspects `[self rightDockItem].button.frame`. If present, places the Yuna button 6 points to the left of the dictation button. If absent, anchors 12 points from the right edge.
-- **Next to Emoji**: Inspects `[self leftDockItem].button.frame` and anchors 6 points to the right of the emoji button.
-- **Center**: Calculates `(bounds.size.width - buttonWidth) / 2.0`.
+When `layoutSubviews` fires, `yna_layoutDockButton` dynamically queries the layout frames of native dock items (`leftDockItem` and `rightDockItem`):
+- **Vertical Alignment**: Directly locks `targetYCenter` to `leftBtn.center.y` (the language button switcher / Globe button `🌐`). This completely eliminates vertical displacement or overlap with upper keyboard rows like the Delete or Return keys.
+- **Next to Dictation (Default)**:
+  - If dictation is enabled and visible (`isRightBtnVisible`), places the Yuna button immediately to the left of the dictation button (`rightBtn.frame.origin.x - (btnW / 2.0) - 6.0`).
+  - If dictation is disabled or absent, Yuna takes the right dock slot (`bounds.size.width - leftBtn.center.x`), perfectly mirroring the language button switcher on the opposite side of the keyboard.
+- **Next to Emoji / Language**: Inspects `leftBtn.frame` and anchors 6 points to the right of the left dock button.
+- **Center**: Calculates `bounds.size.width / 2.0` with `targetYCenter = leftBtn.center.y`.
 
 This approach ensures zero collision with native iOS dock buttons across device rotations and keyboard layout changes.
 
