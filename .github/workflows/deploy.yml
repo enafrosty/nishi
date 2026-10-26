@@ -41,20 +41,19 @@ jobs:
     name: Build Yuna Tweak (Theos arm64/arm64e)
     runs-on: macos-latest
     needs: test
-    continue-on-error: true
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Setup Theos
-        uses: waruhachi/theos-action@v2
-        with:
-          theos-src: 'theos/theos'
-          theos-branch: 'master'
-          sdks-src: 'theos/sdks'
-          sdks-branch: 'master'
+      - name: Setup Theos & iOS SDK
+        run: |
+          git clone --recursive https://github.com/theos/theos.git ~/theos
+          git clone --depth=1 https://github.com/theos/sdks.git ~/theos/sdks
+          cp include/libellekit.tbd ~/theos/lib/libellekit.tbd
+          echo "THEOS=$HOME/theos" >> $GITHUB_ENV
+          echo "THEOS_PACKAGE_SCHEME=rootless" >> $GITHUB_ENV
 
       - name: Compile and Package Rootless Tweak
         run: |
@@ -72,7 +71,7 @@ jobs:
         with:
           name: yuna-deb
           path: built_debs/*.deb
-          if-no-files-found: ignore
+          if-no-files-found: error
 
   deploy-pages:
     name: Build Repo & Deploy Pages
