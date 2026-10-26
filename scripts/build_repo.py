@@ -8,6 +8,8 @@ import os
 import sys
 import hashlib
 import gzip
+import bz2
+import lzma
 import tarfile
 import io
 import struct
@@ -165,15 +167,44 @@ def build_repo():
         f.write(packages_content)
     print(f"[*] Wrote {packages_path} ({len(packages_content)} bytes)")
     
-    # Write Packages.gz
+    # Write Packages.gz (gzip)
     packages_gz_path = os.path.join(DIST_DIR, "Packages.gz")
     with gzip.open(packages_gz_path, "wb") as f:
         f.write(packages_content.encode("utf-8"))
     print(f"[*] Wrote {packages_gz_path}")
+
+    # Write Packages.bz2 (bzip2)
+    packages_bz2_path = os.path.join(DIST_DIR, "Packages.bz2")
+    with bz2.open(packages_bz2_path, "wb") as f:
+        f.write(packages_content.encode("utf-8"))
+    print(f"[*] Wrote {packages_bz2_path}")
+
+    # Write Packages.xz (lzma)
+    packages_xz_path = os.path.join(DIST_DIR, "Packages.xz")
+    with lzma.open(packages_xz_path, "wb") as f:
+        f.write(packages_content.encode("utf-8"))
+    print(f"[*] Wrote {packages_xz_path}")
     
+    # Mirror deb files to root directory to prevent any 404s if clients request root path
+    for deb in deb_files:
+        src = os.path.join(DEBS_DIR, deb)
+        dst = os.path.join(DIST_DIR, deb)
+        if not os.path.exists(dst) or os.path.getmtime(src) > os.path.getmtime(dst):
+            shutil.copy2(src, dst)
+            print(f"[*] Mirrored deb to root: {deb}")
+
+    # Ensure .nojekyll exists so GitHub Pages serves raw files without Jekyll interference
+    nojekyll_path = os.path.join(DIST_DIR, ".nojekyll")
+    if not os.path.exists(nojekyll_path):
+        with open(nojekyll_path, "w") as f:
+            pass
+        print(f"[*] Created {nojekyll_path}")
+
     # Generate Release file
     pkg_h = get_hashes(packages_path)
     pkg_gz_h = get_hashes(packages_gz_path)
+    pkg_bz2_h = get_hashes(packages_bz2_path)
+    pkg_xz_h = get_hashes(packages_xz_path)
     
     release_lines = [
         "Origin: Nishi",
@@ -181,18 +212,24 @@ def build_repo():
         "Suite: stable",
         "Version: 1.0",
         "Codename: ios",
-        "Architectures: iphoneos-arm64",
+        "Architectures: iphoneos-arm64 iphoneos-arm",
         "Components: main",
         "Description: Rootless iOS jailbreak tweak repository by frosty",
         "MD5Sum:",
         f" {pkg_h['md5']} {pkg_h['size']} Packages",
         f" {pkg_gz_h['md5']} {pkg_gz_h['size']} Packages.gz",
+        f" {pkg_bz2_h['md5']} {pkg_bz2_h['size']} Packages.bz2",
+        f" {pkg_xz_h['md5']} {pkg_xz_h['size']} Packages.xz",
         "SHA1:",
         f" {pkg_h['sha1']} {pkg_h['size']} Packages",
         f" {pkg_gz_h['sha1']} {pkg_gz_h['size']} Packages.gz",
+        f" {pkg_bz2_h['sha1']} {pkg_bz2_h['size']} Packages.bz2",
+        f" {pkg_xz_h['sha1']} {pkg_xz_h['size']} Packages.xz",
         "SHA256:",
         f" {pkg_h['sha256']} {pkg_h['size']} Packages",
         f" {pkg_gz_h['sha256']} {pkg_gz_h['size']} Packages.gz",
+        f" {pkg_bz2_h['sha256']} {pkg_bz2_h['size']} Packages.bz2",
+        f" {pkg_xz_h['sha256']} {pkg_xz_h['size']} Packages.xz",
         ""
     ]
     release_path = os.path.join(DIST_DIR, "Release")

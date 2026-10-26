@@ -121,10 +121,13 @@ jobs:
 
       - name: Verify Repository Distribution Artifacts
         run: |
-          ls -la Packages Packages.gz Release debs/
+          ls -la Packages Packages.gz Packages.bz2 Packages.xz Release debs/
           test -f Packages
           test -f Packages.gz
+          test -f Packages.bz2
+          test -f Packages.xz
           test -f Release
+          test -f .nojekyll
           test -f index.html
 
       - name: Setup Pages

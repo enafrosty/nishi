@@ -3,15 +3,21 @@ Label: Nishi
 Suite: stable
 Version: 1.0
 Codename: ios
-Architectures: iphoneos-arm64
+Architectures: iphoneos-arm64 iphoneos-arm
 Components: main
 Description: Rootless iOS jailbreak tweak repository by frosty
 MD5Sum:
- cf4c240bda9df89c32d8968ac16f5934 1661 Packages
- 6ab73986b8a74e1d6881ed9b9878df48 653 Packages.gz
+ b6f4b3676db97787408760704266b2c3 2544 Packages
+ 0bdc827ed795d1bc991c303843754645 780 Packages.gz
+ db2bd917601a7f77514d9ac240e0784d 948 Packages.bz2
+ 7ad321108be1d637cc87b19284bc6d95 824 Packages.xz
 SHA1:
- df658c9906e50cdb6029576849c4eb6d2eadd0cd 1661 Packages
- e09f20d2560db07d1bd2abdfece2688a6da956e9 653 Packages.gz
+ 92dcbe7c769f8ec9a7e8646685906efc9e133789 2544 Packages
+ a3f603901e27ffc7d61b94a54d94b19fdaaaf48b 780 Packages.gz
+ 833114e40a8c0f135d0a7a68105d98041a688b96 948 Packages.bz2
+ a79c506f5ecf85f46d6ab867f5af15135bc90042 824 Packages.xz
 SHA256:
- 64bc4b1a8d5d9fb0ca03c80936a4a93d0c02bd1e66ba4ce563841cbbea0df6ed 1661 Packages
- 21360b4b7a0b959ff9f1fe5d3852a4469d7dd2b60d15cdab6c489d26badeb7a8 653 Packages.gz
+ 23cb565b9fe409345ca1c79aafcad919ec0b4f13432032e332c38905f06936f5 2544 Packages
+ 3b446df619ccf8960f1ca5eb61ca21b196e3cf49656bc1f9a119027456d37138 780 Packages.gz
+ f540668c9b194fd970f8769dab39431daabd9332f1bdbc31b6cdcac98b63ca2b 948 Packages.bz2
+ ecf9f2b2b7f2ba7d3fdb159b2979bc5cf93874e09144ccbee3404c97911609af 824 Packages.xz
