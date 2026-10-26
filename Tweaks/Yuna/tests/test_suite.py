@@ -127,6 +127,7 @@ def test_control_file():
     assert "ellekit" in fields.get("Depends", ""), "Must depend on ellekit for arm64e PAC support"
     assert "preferenceloader" in fields.get("Depends", ""), "Must depend on preferenceloader"
     assert "SileoDepiction" in fields, "Must include SileoDepiction field for Sileo compatibility"
+    assert "cydia::respring" in fields.get("Tag", ""), "Must include cydia::respring tag for native Sileo respring button"
 
 @test("Sileo Depiction JSON Schema & Compatibility")
 def test_sileo_depiction():
@@ -156,6 +157,11 @@ def test_maintainer_scripts():
     assert "/var/jb/Library/Application Support/Yuna" in postinst_src, "postinst must set rootless storage path"
     assert "chown -R 501:501" in postinst_src, "postinst must set mobile user ownership"
     assert "chmod 777" in postinst_src, "postinst must set open permissions for image/history storage"
+    assert "sbreload" not in postinst_src, "postinst must not call sbreload directly; rely on cydia::respring for native Sileo button"
+
+    with open(prerm, "r", encoding="utf-8") as f:
+        prerm_src = f.read()
+    assert "killall -HUP SpringBoard" not in prerm_src, "prerm must not abruptly kill SpringBoard"
 
 @test("PreferenceLoader Staging and Resource Icons")
 def test_preferenceloader_staging():

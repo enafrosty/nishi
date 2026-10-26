@@ -1,9 +1,4 @@
 #!/bin/sh
 set -e
 
-# Stop clipboard server if active
-if [ -x "/var/jb/usr/bin/killall" ]; then
-    /var/jb/usr/bin/killall -HUP SpringBoard || true
-fi
-
 exit 0

@@ -28,10 +28,20 @@ def create_ar_header(filename, size, mtime=None, mode=0o100644):
     )
     return header.encode("ascii")
 
+def get_yuna_version():
+    ctrl_path = os.path.join(YUNA_DIR, "control")
+    if os.path.exists(ctrl_path):
+        with open(ctrl_path, "r", encoding="utf-8") as f:
+            for line in f:
+                if line.startswith("Version:"):
+                    return line.split(":", 1)[1].strip()
+    return "1.0.1"
+
 def build_yuna_deb(output_path=None):
     os.makedirs(DEBS_DIR, exist_ok=True)
     if not output_path:
-        output_path = os.path.join(DEBS_DIR, "com.frosty.yuna_1.0.0_iphoneos-arm64.deb")
+        version = get_yuna_version()
+        output_path = os.path.join(DEBS_DIR, f"com.frosty.yuna_{version}_iphoneos-arm64.deb")
         
     print(f"[*] Packaging Yuna into {output_path}...")
     

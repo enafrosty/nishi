@@ -70,7 +70,7 @@
         {
           "class": "DepictionTableTextView",
           "title": "Version",
-          "text": "1.0.0"
+          "text": "1.0.1"
         },
         {
           "class": "DepictionTableTextView",
@@ -88,6 +88,17 @@
     {
       "tabname": "Changelog",
       "views": [
+        {
+          "class": "DepictionHeaderView",
+          "title": "Version 1.0.1"
+        },
+        {
+          "class": "DepictionMarkdownView",
+          "markdown": "- **Native Sileo Respring**: Replaced abrupt script respring with native `cydia::respring` tag, displaying Sileo's native \"Restart SpringBoard\" prompt.\n- **Dock Alignment**: Perfectly aligned clipboard icon with the language switcher row on the right side of the keyboard.\n- **Package Artwork**: Added official character icon and depiction banner."
+        },
+        {
+          "class": "DepictionSeparatorView"
+        },
         {
           "class": "DepictionHeaderView",
           "title": "Version 1.0.0"
