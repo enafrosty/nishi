@@ -1,12 +1,24 @@
 #import "YunaStorage.h"
+#import "YunaItem.h"
+#import "UI/YunaSettingsHelper.h"
+#import "Headers/YunaCommon.h"
 #import <CommonCrypto/CommonDigest.h>
 #import <notify.h>
+#import <sys/stat.h>
 
 @interface YunaStorage () {
     NSMutableArray<YunaItem *> *_items;
     dispatch_queue_t _storageQueue;
 }
 @end
+
+static void yna_broadcastCommand(uint8_t action, uint64_t hashId) {
+    uint64_t state = (((uint64_t)action) << 56) | (hashId & 0x00FFFFFFFFFFFFFFULL);
+    int token = 0;
+    notify_register_check(YUNA_CMD_NOTIFICATION, &token);
+    notify_set_state(token, state);
+    notify_post(YUNA_CMD_NOTIFICATION);
+}
 
 @implementation YunaStorage
 
@@ -36,15 +48,26 @@
     NSString *baseDir = YUNA_STORAGE_PATH;
     NSString *imgDir = YUNA_IMAGES_DIR;
     
+    NSDictionary *dirAttrs = @{NSFilePosixPermissions: @(0777)};
+    
     if (![fm fileExistsAtPath:baseDir]) {
-        [fm createDirectoryAtPath:baseDir withIntermediateDirectories:YES attributes:@{
-            NSFilePosixPermissions: @(0755)
-        } error:nil];
+        [fm createDirectoryAtPath:baseDir withIntermediateDirectories:YES attributes:dirAttrs error:nil];
+    } else {
+        [fm setAttributes:dirAttrs ofItemAtPath:baseDir error:nil];
     }
+    
     if (![fm fileExistsAtPath:imgDir]) {
-        [fm createDirectoryAtPath:imgDir withIntermediateDirectories:YES attributes:@{
-            NSFilePosixPermissions: @(0755)
-        } error:nil];
+        [fm createDirectoryAtPath:imgDir withIntermediateDirectories:YES attributes:dirAttrs error:nil];
+    } else {
+        [fm setAttributes:dirAttrs ofItemAtPath:imgDir error:nil];
+    }
+    
+    chmod([baseDir fileSystemRepresentation], 0777);
+    chmod([imgDir fileSystemRepresentation], 0777);
+    
+    NSString *filePath = YUNA_HISTORY_FILE;
+    if ([fm fileExistsAtPath:filePath]) {
+        chmod([filePath fileSystemRepresentation], 0666);
     }
 }
 
@@ -55,27 +78,25 @@
 }
 
 - (void)_lockedReloadFromDisk {
-    NSArray *plistData = nil;
+    NSString *filePath = YUNA_HISTORY_FILE;
+    NSFileManager *fm = [NSFileManager defaultManager];
     
-    // 1. Check CFPreferences first (accessible across sandboxed apps via cfprefsd)
-    CFPreferencesAppSynchronize((CFStringRef)YUNA_BUNDLE_ID);
-    CFPropertyListRef prefVal = CFPreferencesCopyAppValue(CFSTR("clipboard_history"), (CFStringRef)YUNA_BUNDLE_ID);
-    if (prefVal) {
-        if ([(__bridge id)prefVal isKindOfClass:[NSArray class]]) {
-            plistData = (__bridge_transfer NSArray *)prefVal;
-        } else {
-            CFRelease(prefVal);
-        }
+    if (![fm fileExistsAtPath:filePath]) {
+        _items = [NSMutableArray array];
+        return;
     }
     
-    // 2. Fallback to file storage if preferences are empty
-    if (!plistData || plistData.count == 0) {
-        NSString *filePath = YUNA_HISTORY_FILE;
-        if ([[NSFileManager defaultManager] fileExistsAtPath:filePath]) {
-            plistData = [NSArray arrayWithContentsOfFile:filePath];
-        }
+    NSError *error = nil;
+    NSData *data = [NSData dataWithContentsOfFile:filePath options:0 error:&error];
+    if (!data || data.length == 0) {
+        _items = [NSMutableArray array];
+        return;
     }
     
+    NSArray *plistData = [NSPropertyListSerialization propertyListWithData:data
+                                                                   options:NSPropertyListImmutable
+                                                                    format:NULL
+                                                                     error:&error];
     if (!plistData || ![plistData isKindOfClass:[NSArray class]]) {
         _items = [NSMutableArray array];
         return;
@@ -104,7 +125,7 @@
     _items = loaded;
 }
 
-- (void)_lockedSaveToDisk {
+- (BOOL)_lockedSaveToDisk {
     [self ensureDirectoriesExist];
     NSString *filePath = YUNA_HISTORY_FILE;
     NSMutableArray *plistArray = [NSMutableArray arrayWithCapacity:_items.count];
@@ -113,14 +134,30 @@
         [plistArray addObject:[item dictionaryRepresentation]];
     }
     
-    // 1. Sync to CFPreferences domain (accessible by all apps via cfprefsd)
-    CFPreferencesSetAppValue(CFSTR("clipboard_history"), (__bridge CFPropertyListRef)plistArray, (CFStringRef)YUNA_BUNDLE_ID);
+    // Clean up any stale containerized CFPreferences key
+    CFPreferencesSetAppValue(CFSTR("clipboard_history"), NULL, (CFStringRef)YUNA_BUNDLE_ID);
     CFPreferencesAppSynchronize((CFStringRef)YUNA_BUNDLE_ID);
     
-    // 2. Also write to rootless file path if writable
-    [plistArray writeToFile:filePath atomically:YES];
+    NSError *error = nil;
+    NSData *data = [NSPropertyListSerialization dataWithPropertyList:plistArray
+                                                             format:NSPropertyListXMLFormat_v1_0
+                                                            options:0
+                                                              error:&error];
+    BOOL written = NO;
+    if (data) {
+        written = [data writeToFile:filePath options:NSDataWritingAtomic error:&error];
+        if (!written) {
+            written = [data writeToFile:filePath options:0 error:&error];
+        }
+        if (written) {
+            chmod([filePath fileSystemRepresentation], 0666);
+        } else {
+            YunaLog(@"Failed to write clipboard history to %@: %@", filePath, error);
+        }
+    }
     
     notify_post(YUNA_CLIPBOARD_NOTIFICATION);
+    return written;
 }
 
 - (void)_lockedDeleteAssociatedImageFileForItem:(YunaItem *)item {
@@ -131,6 +168,11 @@
 }
 
 - (void)_lockedPruneItems {
+    NSInteger settingsMax = [[YunaSettingsHelper sharedHelper] maxItems];
+    if (settingsMax >= 5 && settingsMax <= 200) {
+        _maxItems = settingsMax;
+    }
+    
     // Keep all pinned items. Unpinned items count must not exceed _maxItems.
     NSMutableArray<YunaItem *> *pinned = [NSMutableArray array];
     NSMutableArray<YunaItem *> *unpinned = [NSMutableArray array];
@@ -177,6 +219,8 @@
     
     __block BOOL added = NO;
     dispatch_sync(_storageQueue, ^{
+        [self _lockedReloadFromDisk];
+        
         // Check for duplicates
         for (NSUInteger i = 0; i < _items.count; i++) {
             YunaItem *existing = _items[i];
@@ -295,8 +339,27 @@
 - (void)togglePinnedForUUID:(NSString *)uuid {
     if (!uuid) return;
     dispatch_sync(_storageQueue, ^{
+        [self _lockedReloadFromDisk];
         for (YunaItem *item in _items) {
             if ([item.uuid isEqualToString:uuid]) {
+                item.isPinned = !item.isPinned;
+                break;
+            }
+        }
+        [self _lockedPruneItems];
+        BOOL saved = [self _lockedSaveToDisk];
+        if (!saved) {
+            yna_broadcastCommand(YUNA_CMD_TOGGLE_PIN, [YunaItem hashForUUID:uuid]);
+        }
+    });
+}
+
+- (void)togglePinnedForHash:(uint64_t)hashId {
+    if (hashId == 0) return;
+    dispatch_sync(_storageQueue, ^{
+        [self _lockedReloadFromDisk];
+        for (YunaItem *item in _items) {
+            if ([item hashId] == hashId) {
                 item.isPinned = !item.isPinned;
                 break;
             }
@@ -309,6 +372,7 @@
 - (void)setPinned:(BOOL)isPinned forUUID:(NSString *)uuid {
     if (!uuid) return;
     dispatch_sync(_storageQueue, ^{
+        [self _lockedReloadFromDisk];
         for (YunaItem *item in _items) {
             if ([item.uuid isEqualToString:uuid]) {
                 item.isPinned = isPinned;
@@ -316,16 +380,42 @@
             }
         }
         [self _lockedPruneItems];
-        [self _lockedSaveToDisk];
+        BOOL saved = [self _lockedSaveToDisk];
+        if (!saved) {
+            yna_broadcastCommand(YUNA_CMD_TOGGLE_PIN, [YunaItem hashForUUID:uuid]);
+        }
     });
 }
 
 - (void)deleteItemWithUUID:(NSString *)uuid {
     if (!uuid) return;
     dispatch_sync(_storageQueue, ^{
+        [self _lockedReloadFromDisk];
         YunaItem *target = nil;
         for (YunaItem *item in _items) {
             if ([item.uuid isEqualToString:uuid]) {
+                target = item;
+                break;
+            }
+        }
+        if (target) {
+            [self _lockedDeleteAssociatedImageFileForItem:target];
+            [_items removeObject:target];
+            BOOL saved = [self _lockedSaveToDisk];
+            if (!saved) {
+                yna_broadcastCommand(YUNA_CMD_DELETE, [YunaItem hashForUUID:uuid]);
+            }
+        }
+    });
+}
+
+- (void)deleteItemWithHash:(uint64_t)hashId {
+    if (hashId == 0) return;
+    dispatch_sync(_storageQueue, ^{
+        [self _lockedReloadFromDisk];
+        YunaItem *target = nil;
+        for (YunaItem *item in _items) {
+            if ([item hashId] == hashId) {
                 target = item;
                 break;
             }
@@ -340,6 +430,7 @@
 
 - (void)clearUnpinnedItems {
     dispatch_sync(_storageQueue, ^{
+        [self _lockedReloadFromDisk];
         NSMutableArray *keep = [NSMutableArray array];
         for (YunaItem *item in _items) {
             if (item.isPinned) {
@@ -349,12 +440,16 @@
             }
         }
         _items = keep;
-        [self _lockedSaveToDisk];
+        BOOL saved = [self _lockedSaveToDisk];
+        if (!saved) {
+            yna_broadcastCommand(YUNA_CMD_CLEAR_UNPINNED, 0);
+        }
     });
 }
 
 - (void)clearAllItems {
     dispatch_sync(_storageQueue, ^{
+        [self _lockedReloadFromDisk];
         for (YunaItem *item in _items) {
             [self _lockedDeleteAssociatedImageFileForItem:item];
         }
@@ -381,7 +476,13 @@
     NSString *fullPath = [YUNA_IMAGES_DIR stringByAppendingPathComponent:fileName];
     
     if (![[NSFileManager defaultManager] fileExistsAtPath:fullPath]) {
-        [imageData writeToFile:fullPath options:NSDataWritingAtomic error:nil];
+        BOOL written = [imageData writeToFile:fullPath options:NSDataWritingAtomic error:nil];
+        if (!written) {
+            written = [imageData writeToFile:fullPath options:0 error:nil];
+        }
+        if (written) {
+            chmod([fullPath fileSystemRepresentation], 0666);
+        }
     }
     
     return fileName;

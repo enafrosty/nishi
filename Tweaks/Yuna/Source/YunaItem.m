@@ -134,6 +134,21 @@
     return item;
 }
 
+- (uint64_t)hashId {
+    return [YunaItem hashForUUID:self.uuid];
+}
+
++ (uint64_t)hashForUUID:(NSString *)uuid {
+    if (!uuid || uuid.length == 0) return 0;
+    const char *str = [uuid UTF8String];
+    uint64_t hash = 5381;
+    int c;
+    while ((c = *str++)) {
+        hash = ((hash << 5) + hash) + c;
+    }
+    return hash & 0x00FFFFFFFFFFFFFFULL;
+}
+
 - (NSString *)displayTitle {
     if (self.title && self.title.length > 0) {
         return self.title;
@@ -187,9 +202,13 @@
     if (diff < 86400.0) return [NSString stringWithFormat:@"%.0fh ago", diff / 3600.0];
     if (diff < 172800.0) return @"Yesterday";
     
-    NSDateFormatter *df = [[NSDateFormatter alloc] init];
-    df.dateStyle = NSDateFormatterShortStyle;
-    df.timeStyle = NSDateFormatterNoStyle;
+    static NSDateFormatter *df = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        df = [[NSDateFormatter alloc] init];
+        df.dateStyle = NSDateFormatterShortStyle;
+        df.timeStyle = NSDateFormatterNoStyle;
+    });
     return [df stringFromDate:[NSDate dateWithTimeIntervalSince1970:self.timestamp]];
 }
 

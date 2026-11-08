@@ -26,6 +26,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSDictionary<NSString *, id> *)dictionaryRepresentation;
 + (nullable instancetype)itemFromDictionary:(NSDictionary<NSString *, id> *)dict;
 
+- (uint64_t)hashId;
++ (uint64_t)hashForUUID:(NSString *)uuid;
+
 - (NSString *)displayTitle;
 - (NSString *)displaySubtitle;
 - (NSString *)relativeTimeString;

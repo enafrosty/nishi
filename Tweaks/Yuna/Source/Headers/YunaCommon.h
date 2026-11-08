@@ -9,6 +9,11 @@
 #define YUNA_PREFS_NOTIFICATION "com.frosty.yuna/ReloadPrefs"
 #define YUNA_CLIPBOARD_NOTIFICATION "com.frosty.yuna/ClipboardChanged"
 #define YUNA_EXT_PASTEBOARD_NOTIFICATION "com.frosty.yuna/SystemPasteboardChanged"
+#define YUNA_CMD_NOTIFICATION "com.frosty.yuna/Command"
+
+#define YUNA_CMD_TOGGLE_PIN 1
+#define YUNA_CMD_DELETE 2
+#define YUNA_CMD_CLEAR_UNPINNED 3
 
 #define YUNA_STORAGE_PATH [NSString stringWithUTF8String:JBROOT_PATH("/Library/Application Support/Yuna")]
 #define YUNA_HISTORY_FILE [YUNA_STORAGE_PATH stringByAppendingPathComponent:@"history.plist"]

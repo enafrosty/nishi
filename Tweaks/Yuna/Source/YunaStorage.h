@@ -23,8 +23,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL)addItem:(YunaItem *)item;
 - (void)togglePinnedForUUID:(NSString *)uuid;
+- (void)togglePinnedForHash:(uint64_t)hashId;
 - (void)setPinned:(BOOL)isPinned forUUID:(NSString *)uuid;
 - (void)deleteItemWithUUID:(NSString *)uuid;
+- (void)deleteItemWithHash:(uint64_t)hashId;
 - (void)clearUnpinnedItems;
 - (void)clearAllItems;
 

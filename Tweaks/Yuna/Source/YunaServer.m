@@ -12,6 +12,8 @@
     int _tokenPasteboard;
     int _tokenUIKit;
     int _tokenExt;
+    int _tokenCmd;
+    int _tokenClipboard;
 }
 @end
 
@@ -35,6 +37,8 @@
         _tokenPasteboard = 0;
         _tokenUIKit = 0;
         _tokenExt = 0;
+        _tokenCmd = 0;
+        _tokenClipboard = 0;
     }
     return self;
 }
@@ -44,10 +48,6 @@
     _isObserving = YES;
     
     YunaLog(@"Starting Yuna clipboard server in SpringBoard (event-driven, zero polling)...");
-    
-    // Initial change count
-    UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
-    _lastChangeCount = pasteboard.changeCount;
     
     // 1. In-process pasteboard changes
     [[NSNotificationCenter defaultCenter] addObserver:self
@@ -70,6 +70,33 @@
     notify_register_dispatch(YUNA_EXT_PASTEBOARD_NOTIFICATION, &_tokenExt, bgQueue, ^(int token) {
         [weakSelf checkPasteboard];
     });
+    
+    // 3. Sandboxed IPC command dispatch: executes mutations (pin, delete, clear) on behalf of sandboxed apps
+    notify_register_dispatch(YUNA_CMD_NOTIFICATION, &_tokenCmd, _workerQueue, ^(int t) {
+        uint64_t state = 0;
+        notify_get_state(t, &state);
+        if (state == 0) return;
+        uint8_t action = (state >> 56) & 0xFF;
+        uint64_t hashId = state & 0x00FFFFFFFFFFFFFFULL;
+        
+        if (action == YUNA_CMD_TOGGLE_PIN) {
+            [[YunaStorage sharedInstance] togglePinnedForHash:hashId];
+        } else if (action == YUNA_CMD_DELETE) {
+            [[YunaStorage sharedInstance] deleteItemWithHash:hashId];
+        } else if (action == YUNA_CMD_CLEAR_UNPINNED) {
+            [[YunaStorage sharedInstance] clearUnpinnedItems];
+        }
+    });
+    
+    // 4. Reload in-memory items when any other process mutates history.plist
+    notify_register_dispatch(YUNA_CLIPBOARD_NOTIFICATION, &_tokenClipboard, _workerQueue, ^(int t) {
+        [[YunaStorage sharedInstance] reloadFromDisk];
+    });
+    
+    // Initial sync of existing clipboard
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [weakSelf checkPasteboard];
+    });
 }
 
 - (void)stopServer {
@@ -77,11 +104,13 @@
     _isObserving = NO;
     
     [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                    name:UIPasteboardChangedNotification
-                                                  object:nil];
+                                                     name:UIPasteboardChangedNotification
+                                                   object:nil];
     if (_tokenPasteboard > 0) notify_cancel(_tokenPasteboard);
     if (_tokenUIKit > 0) notify_cancel(_tokenUIKit);
     if (_tokenExt > 0) notify_cancel(_tokenExt);
+    if (_tokenCmd > 0) notify_cancel(_tokenCmd);
+    if (_tokenClipboard > 0) notify_cancel(_tokenClipboard);
 }
 
 - (void)pasteboardChanged:(NSNotification *)note {

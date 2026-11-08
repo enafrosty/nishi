@@ -104,11 +104,16 @@ When an image is intercepted:
 
 ## 4. Storage Engine & Eviction Algorithm (`YunaStorage`)
 
-### 4.1 Persistence Structure
+### 4.1 Persistence Structure & Universal Access
 Clipboard metadata is serialized as an array of dictionaries inside:
 ```
 /var/jb/Library/Application Support/Yuna/history.plist
 ```
+To eliminate per-app containerization and ensure all sandboxed and unsandboxed apps share identical clipboard history:
+- Storage directories are maintained with `0777` POSIX permissions, and `history.plist` with `0666` permissions.
+- In-process CFPreferences are explicitly avoided for clipboard items because `cfprefsd` sandboxes preferences into each app's private container (`/var/mobile/Containers/Data/Application/<UUID>/...`).
+- When mutations (Pin, Delete, Clear) are performed from sandboxed apps, a Darwin IPC bridge (`com.frosty.yuna/Command` via `notify_set_state` 64-bit state) acts as a universal fallback, allowing SpringBoard to persist mutations on behalf of sandboxed apps.
+
 Every item contains:
 - `uuid`: Unique identifier string
 - `type`: Enum (Text, Image, URL, File)

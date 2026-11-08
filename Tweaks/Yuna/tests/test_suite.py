@@ -234,9 +234,28 @@ def test_preferences_path_audit():
     assert '"/var/mobile/Library/Preferences/com.frosty.yuna.plist"' in content, "YUNA_PREFS_FILE must point to /var/mobile/Library/Preferences/"
     assert "YUNA_EXT_PASTEBOARD_NOTIFICATION" in content, "Must define YUNA_EXT_PASTEBOARD_NOTIFICATION"
 
+@test("Universal Clipboard Storage Architecture Audit")
+def test_universal_clipboard_audit():
+    common_h = os.path.join(YUNA_DIR, "Source", "Headers", "YunaCommon.h")
+    with open(common_h, "r", encoding="utf-8") as f:
+        common_src = f.read()
+    assert "YUNA_CMD_NOTIFICATION" in common_src, "Must define YUNA_CMD_NOTIFICATION"
+    assert "YUNA_CMD_TOGGLE_PIN" in common_src, "Must define YUNA_CMD_TOGGLE_PIN"
+    assert "YUNA_CMD_DELETE" in common_src, "Must define YUNA_CMD_DELETE"
+    assert "YUNA_CMD_CLEAR_UNPINNED" in common_src, "Must define YUNA_CMD_CLEAR_UNPINNED"
+
+    storage_m = os.path.join(YUNA_DIR, "Source", "YunaStorage.m")
+    with open(storage_m, "r", encoding="utf-8") as f:
+        storage_src = f.read()
+    assert 'CFPreferencesCopyAppValue(CFSTR("clipboard_history")' not in storage_src, \
+        "YunaStorage must NOT read CFPreferences for clipboard items to prevent per-app containerization!"
+    assert "0777" in storage_src, "YunaStorage must enforce 0777 directory permissions for universal access"
+    assert "0666" in storage_src, "YunaStorage must enforce 0666 file permissions for universal access"
+
 test_makefiles()
 test_source_rootless_audit()
 test_preferences_path_audit()
+test_universal_clipboard_audit()
 
 # ---------------------------------------------------------
 # 4. Algorithmic Simulation: Storage & Pinning

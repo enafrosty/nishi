@@ -70,7 +70,7 @@
         {
           "class": "DepictionTableTextView",
           "title": "Version",
-          "text": "1.0.4"
+          "text": "1.0.5"
         },
         {
           "class": "DepictionTableTextView",
@@ -88,6 +88,17 @@
     {
       "tabname": "Changelog",
       "views": [
+        {
+          "class": "DepictionHeaderView",
+          "title": "Version 1.0.5"
+        },
+        {
+          "class": "DepictionMarkdownView",
+          "markdown": "- **Universal Cross-App Clipboard Sync**: Fixed per-app clipboard isolation caused by containerized CFPreferences. Migrated to unified rootless file storage (history.plist) with universal 0777/0666 permissions and a Darwin 64-bit IPC command fallback, guaranteeing instant, seamless clipboard synchronization across all sandboxed and system apps.\n- **SpringBoard In-Memory Sync**: Connected SpringBoard's daemon to clipboard and mutation notification channels so pinning, unpinning, and deletions in any app immediately reflect in SpringBoard without desync.\n- **UI Performance Polish**: Cached date formatter in memory and hardened root view controller traversal across active window scenes."
+        },
+        {
+          "class": "DepictionSeparatorView"
+        },
         {
           "class": "DepictionHeaderView",
           "title": "Version 1.0.4"

@@ -44,6 +44,7 @@ typedef NS_ENUM(NSInteger, YunaFilterTab) {
         _currentFilter = YunaFilterTabAll;
         [self setupUI];
         [self registerNotifications];
+        [[YunaStorage sharedInstance] reloadFromDisk];
         [self reloadData];
     }
     return self;
@@ -337,7 +338,26 @@ typedef NS_ENUM(NSInteger, YunaFilterTab) {
 }
 
 - (UIViewController *)topViewController {
-    UIWindow *window = self.window ?: [UIApplication sharedApplication].keyWindow;
+    UIWindow *window = self.window;
+    if (!window || [window isKindOfClass:NSClassFromString(@"UIRemoteKeyboardWindow")] || [window isKindOfClass:NSClassFromString(@"UITextEffectsWindow")]) {
+        for (UIScene *scene in [UIApplication sharedApplication].connectedScenes) {
+            if (scene.activationState == UISceneActivationStateForegroundActive && [scene isKindOfClass:[UIWindowScene class]]) {
+                UIWindowScene *ws = (UIWindowScene *)scene;
+                for (UIWindow *w in ws.windows) {
+                    if (w.isKeyWindow) {
+                        window = w;
+                        break;
+                    }
+                }
+                if (window && ![window isKindOfClass:NSClassFromString(@"UIRemoteKeyboardWindow")] && ![window isKindOfClass:NSClassFromString(@"UITextEffectsWindow")]) {
+                    break;
+                }
+            }
+        }
+    }
+    if (!window) {
+        window = [UIApplication sharedApplication].keyWindow;
+    }
     UIViewController *top = window.rootViewController;
     while (top.presentedViewController) {
         top = top.presentedViewController;
@@ -363,6 +383,9 @@ typedef NS_ENUM(NSInteger, YunaFilterTab) {
     UIViewController *topVC = [self topViewController];
     if (topVC) {
         [topVC presentViewController:alert animated:YES completion:nil];
+    } else {
+        [[YunaStorage sharedInstance] clearUnpinnedItems];
+        [self reloadData];
     }
 }
 
