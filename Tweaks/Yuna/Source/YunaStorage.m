@@ -1,6 +1,5 @@
 #import "YunaStorage.h"
 #import "YunaItem.h"
-#import "UI/YunaSettingsHelper.h"
 #import "Headers/YunaCommon.h"
 #import <CommonCrypto/CommonDigest.h>
 #import <notify.h>
@@ -168,9 +167,12 @@ static void yna_broadcastCommand(uint8_t action, uint64_t hashId) {
 }
 
 - (void)_lockedPruneItems {
-    NSInteger settingsMax = [[YunaSettingsHelper sharedHelper] maxItems];
-    if (settingsMax >= 5 && settingsMax <= 200) {
-        _maxItems = settingsMax;
+    NSDictionary *prefs = [NSDictionary dictionaryWithContentsOfFile:YUNA_PREFS_FILE];
+    if (prefs && prefs[@"maxItems"]) {
+        NSInteger settingsMax = [prefs[@"maxItems"] integerValue];
+        if (settingsMax >= 5 && settingsMax <= 200) {
+            _maxItems = settingsMax;
+        }
     }
     
     // Keep all pinned items. Unpinned items count must not exceed _maxItems.

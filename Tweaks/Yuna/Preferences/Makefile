@@ -6,7 +6,7 @@ include $(THEOS)/makefiles/common.mk
 
 BUNDLE_NAME = YunaPrefs
 
-YunaPrefs_FILES = Source/YNARootListController.m ../Source/YunaStorage.m ../Source/YunaItem.m
+YunaPrefs_FILES = Source/YNARootListController.m ../Source/YunaStorage.m ../Source/YunaItem.m ../Source/UI/YunaSettingsHelper.m
 YunaPrefs_INSTALL_PATH = /Library/PreferenceBundles
 YunaPrefs_FRAMEWORKS = UIKit
 YunaPrefs_PRIVATE_FRAMEWORKS = Preferences
