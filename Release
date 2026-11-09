@@ -3,21 +3,22 @@ Label: Nishi
 Suite: stable
 Version: 1.0
 Codename: ios
+Date: Mon, 09 Nov 2026 18:11:23 UTC
 Architectures: iphoneos-arm64 iphoneos-arm
 Components: main
 Description: Rootless iOS jailbreak tweak repository by frosty
 MD5Sum:
  78de93d9f4ab001ed2a05057e800679e 6739 Packages
- 3b56b924a7ecbca1629dd3ede154fd96 1308 Packages.gz
+ 5e7affcc2b6cbf984d696dd8d0832ffd 1308 Packages.gz
  1c6fcf343b9f7c9664fa503bb176a557 1511 Packages.bz2
  9971375d1426c5109b526fec306180ab 1272 Packages.xz
 SHA1:
  7a2f4970578d45f78106e1e630567b9debc020c7 6739 Packages
- 520b3bc0e7b1f3b32d2fd25bb392d894e4f08d67 1308 Packages.gz
+ c1a9dc98579d025865657a4f3aef115c6162210a 1308 Packages.gz
  4b398d44b8efc687de50392d8093a10cc3da9cf0 1511 Packages.bz2
  03e8427752488763e8787e108affacbe600ae776 1272 Packages.xz
 SHA256:
  27c76eb4062e7f06419c9d4d69ab97f737f6506ede4ca611043bcd641a7332cf 6739 Packages
- 5960bda15281cf34b2da343456d33cad5e2bb74c2a346900549705cea3d37676 1308 Packages.gz
+ f86085a036095e838a7a8ae89c2c4e075b7209a4d9a67e0d6cce55fa2a732775 1308 Packages.gz
  41208f498e2b4792575f227ebfb182bfac2e20117cdce70059d6627cd3df4fd4 1511 Packages.bz2
  fd721ce59101ef12d7671f46ede3b18597214280b1c8cffea2797255b17e7b04 1272 Packages.xz

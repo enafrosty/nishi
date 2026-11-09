@@ -559,6 +559,7 @@ def test_repo_distribution_files():
     with open(release_path, "r", encoding="utf-8") as f:
         rel_data = f.read()
     assert "Origin: Nishi" in rel_data, "Release file must set Origin: Nishi"
+    assert "Date:" in rel_data, "Release file must include RFC 2822 Date field for Sileo freshness"
     assert "Packages" in rel_data, "Release file must reference Packages checksums"
 
 @test("Explanatory Documentation & READMEs")

@@ -206,12 +206,16 @@ def build_repo():
     pkg_bz2_h = get_hashes(packages_bz2_path)
     pkg_xz_h = get_hashes(packages_xz_path)
     
+    import datetime
+    utc_date = datetime.datetime.now(datetime.timezone.utc).strftime("%a, %d %b %Y %H:%M:%S UTC")
+
     release_lines = [
         "Origin: Nishi",
         "Label: Nishi",
         "Suite: stable",
         "Version: 1.0",
         "Codename: ios",
+        f"Date: {utc_date}",
         "Architectures: iphoneos-arm64 iphoneos-arm",
         "Components: main",
         "Description: Rootless iOS jailbreak tweak repository by frosty",
