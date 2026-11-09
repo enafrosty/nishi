@@ -150,15 +150,22 @@ def test_maintainer_scripts():
     postinst = os.path.join(YUNA_DIR, "layout", "DEBIAN", "postinst")
     prerm = os.path.join(YUNA_DIR, "layout", "DEBIAN", "prerm")
     
-    # If maintainer scripts are present, ensure they do not perform hard kills
-    if os.path.exists(postinst):
-        with open(postinst, "r", encoding="utf-8") as f:
-            postinst_src = f.read()
-        assert "sbreload" not in postinst_src, "postinst must not call sbreload directly; rely on cydia::respring for native Sileo button"
+    assert os.path.exists(postinst), "postinst must exist to ensure rootless directory setup and 0777 permissions"
+    with open(postinst, "r", encoding="utf-8") as f:
+        postinst_src = f.read()
+    assert "/var/jb/Library/Application Support/Yuna" in postinst_src, "postinst must set rootless storage path"
+    assert "chmod 777" in postinst_src, "postinst must set 0777 open permissions for storage"
+    assert "sbreload" not in postinst_src, "postinst must not call sbreload directly; rely on cydia::respring for native Sileo button"
+
     if os.path.exists(prerm):
         with open(prerm, "r", encoding="utf-8") as f:
             prerm_src = f.read()
         assert "killall -HUP SpringBoard" not in prerm_src, "prerm must not abruptly kill SpringBoard"
+
+@test("Rootless Layout Storage Directory Bundling")
+def test_layout_storage_bundling():
+    layout_dir = os.path.join(YUNA_DIR, "layout", "Library", "Application Support", "Yuna", "Images")
+    assert os.path.isdir(layout_dir), f"Layout must bundle Application Support/Yuna/Images directory: {layout_dir}"
 
 @test("PreferenceLoader Staging and Resource Icons")
 def test_preferenceloader_staging():
@@ -184,6 +191,7 @@ def test_preferenceloader_staging():
 test_control_file()
 test_sileo_depiction()
 test_maintainer_scripts()
+test_layout_storage_bundling()
 test_preferenceloader_staging()
 
 # ---------------------------------------------------------

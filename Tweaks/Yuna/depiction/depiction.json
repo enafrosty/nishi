@@ -70,7 +70,7 @@
         {
           "class": "DepictionTableTextView",
           "title": "Version",
-          "text": "1.0.5"
+          "text": "1.0.6"
         },
         {
           "class": "DepictionTableTextView",
@@ -88,6 +88,17 @@
     {
       "tabname": "Changelog",
       "views": [
+        {
+          "class": "DepictionHeaderView",
+          "title": "Version 1.0.6"
+        },
+        {
+          "class": "DepictionMarkdownView",
+          "markdown": "- **Universal Storage Directory & Clipboard Persistence**: Fixed storage directory creation under rootless Dopamine by bundling Application Support/Yuna in the deb layout and adding robust 0777 permission setup in postinst. Sandboxed apps now seamlessly delegate pasteboard capturing to SpringBoard via Darwin notifications, ensuring reliable, universal clipboard saving across all apps.\n- **Zero-Loss Storage & Safe Notifications**: Guarded in-memory clipboard items from being overwritten by failed disk writes or missing files, only broadcasting clipboard change notifications on verified disk writes."
+        },
+        {
+          "class": "DepictionSeparatorView"
+        },
         {
           "class": "DepictionHeaderView",
           "title": "Version 1.0.5"

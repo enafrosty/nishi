@@ -1,0 +1,13 @@
+#!/bin/sh
+set -e
+
+STORAGE_DIR="/var/jb/Library/Application Support/Yuna"
+IMAGES_DIR="/var/jb/Library/Application Support/Yuna/Images"
+
+mkdir -p "$STORAGE_DIR" 2>/dev/null || true
+mkdir -p "$IMAGES_DIR" 2>/dev/null || true
+chown -R 501:501 "$STORAGE_DIR" 2>/dev/null || true
+chmod 777 "$STORAGE_DIR" 2>/dev/null || true
+chmod 777 "$IMAGES_DIR" 2>/dev/null || true
+
+exit 0

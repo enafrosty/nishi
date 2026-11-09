@@ -55,6 +55,16 @@ static UIView *yna_extractDockItemView(id dockItem) {
 
 %group KeyboardHooks
 
+static inline BOOL yna_isSpringBoardProcess(void) {
+    static BOOL isSB = NO;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        NSString *bid = [[NSBundle mainBundle] bundleIdentifier];
+        isSB = [bid isEqualToString:@"com.apple.springboard"];
+    });
+    return isSB;
+}
+
 static void yna_recordPasteboardItem(UIPasteboard *pb) {
     if (!pb) return;
     @autoreleasepool {
@@ -145,7 +155,7 @@ static void yna_recordPasteboardItem(UIPasteboard *pb) {
 
 - (void)setString:(NSString *)string {
     %orig;
-    if (string && string.length > 0) {
+    if (yna_isSpringBoardProcess() && string && string.length > 0) {
         [[YunaStorage sharedInstance] addItem:[YunaItem itemWithText:string]];
     }
     notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
@@ -153,7 +163,7 @@ static void yna_recordPasteboardItem(UIPasteboard *pb) {
 
 - (void)setStrings:(NSArray<NSString *> *)strings {
     %orig;
-    if (strings.firstObject && strings.firstObject.length > 0) {
+    if (yna_isSpringBoardProcess() && strings.firstObject && strings.firstObject.length > 0) {
         [[YunaStorage sharedInstance] addItem:[YunaItem itemWithText:strings.firstObject]];
     }
     notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
@@ -161,7 +171,7 @@ static void yna_recordPasteboardItem(UIPasteboard *pb) {
 
 - (void)setImage:(UIImage *)image {
     %orig;
-    if (image) {
+    if (yna_isSpringBoardProcess() && image) {
         [[YunaStorage sharedInstance] addItem:[YunaItem itemWithImage:image]];
     }
     notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
@@ -169,7 +179,7 @@ static void yna_recordPasteboardItem(UIPasteboard *pb) {
 
 - (void)setImages:(NSArray<UIImage *> *)images {
     %orig;
-    if (images.firstObject) {
+    if (yna_isSpringBoardProcess() && images.firstObject) {
         [[YunaStorage sharedInstance] addItem:[YunaItem itemWithImage:images.firstObject]];
     }
     notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
@@ -177,7 +187,7 @@ static void yna_recordPasteboardItem(UIPasteboard *pb) {
 
 - (void)setURL:(NSURL *)url {
     %orig;
-    if (url) {
+    if (yna_isSpringBoardProcess() && url) {
         if ([url isFileURL]) {
             NSNumber *fileSize = nil;
             [url getResourceValue:&fileSize forKey:NSURLFileSizeKey error:nil];
@@ -191,7 +201,7 @@ static void yna_recordPasteboardItem(UIPasteboard *pb) {
 
 - (void)setURLs:(NSArray<NSURL *> *)urls {
     %orig;
-    if (urls.firstObject) {
+    if (yna_isSpringBoardProcess() && urls.firstObject) {
         NSURL *url = urls.firstObject;
         if ([url isFileURL]) {
             NSNumber *fileSize = nil;
@@ -206,41 +216,51 @@ static void yna_recordPasteboardItem(UIPasteboard *pb) {
 
 - (void)setItems:(NSArray *)items {
     %orig;
-    dispatch_async(dispatch_get_main_queue(), ^{
-        yna_recordPasteboardItem(self);
-    });
+    if (yna_isSpringBoardProcess()) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            yna_recordPasteboardItem(self);
+        });
+    }
     notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
 }
 
 - (void)setItems:(NSArray *)items options:(NSDictionary *)options {
     %orig;
-    dispatch_async(dispatch_get_main_queue(), ^{
-        yna_recordPasteboardItem(self);
-    });
+    if (yna_isSpringBoardProcess()) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            yna_recordPasteboardItem(self);
+        });
+    }
     notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
 }
 
 - (void)setValue:(id)value forPasteboardType:(NSString *)pasteboardType {
     %orig;
-    dispatch_async(dispatch_get_main_queue(), ^{
-        yna_recordPasteboardItem(self);
-    });
+    if (yna_isSpringBoardProcess()) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            yna_recordPasteboardItem(self);
+        });
+    }
     notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
 }
 
 - (void)setData:(NSData *)data forPasteboardType:(NSString *)pasteboardType {
     %orig;
-    dispatch_async(dispatch_get_main_queue(), ^{
-        yna_recordPasteboardItem(self);
-    });
+    if (yna_isSpringBoardProcess()) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            yna_recordPasteboardItem(self);
+        });
+    }
     notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
 }
 
 - (void)setObjects:(NSArray *)objects {
     %orig;
-    dispatch_async(dispatch_get_main_queue(), ^{
-        yna_recordPasteboardItem(self);
-    });
+    if (yna_isSpringBoardProcess()) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            yna_recordPasteboardItem(self);
+        });
+    }
     notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
 }
 
@@ -400,22 +420,31 @@ static void yna_recordPasteboardItem(UIPasteboard *pb) {
         YunaStorage *storage = [YunaStorage sharedInstance];
         [storage reloadFromDisk];
         
+        BOOL needsSync = NO;
         if (pb.hasStrings && pb.string && pb.string.length > 0) {
             NSString *str = pb.string;
             YunaItem *top = [storage allItems].firstObject;
             if (!top || top.type != YunaItemTypeText || ![top.text isEqualToString:str]) {
-                yna_recordPasteboardItem(pb);
+                needsSync = YES;
             }
         } else if (pb.hasImages && pb.image) {
             YunaItem *top = [storage allItems].firstObject;
             if (!top || top.type != YunaItemTypeImage) {
-                yna_recordPasteboardItem(pb);
+                needsSync = YES;
             }
         } else if (pb.hasURLs && pb.URL) {
             NSURL *url = pb.URL;
             YunaItem *top = [storage allItems].firstObject;
             if (!top || top.type != YunaItemTypeURL || ![top.fileURLString isEqualToString:url.absoluteString]) {
+                needsSync = YES;
+            }
+        }
+        
+        if (needsSync) {
+            if (yna_isSpringBoardProcess()) {
                 yna_recordPasteboardItem(pb);
+            } else {
+                notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
             }
         }
     }

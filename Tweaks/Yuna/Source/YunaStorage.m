@@ -81,14 +81,18 @@ static void yna_broadcastCommand(uint8_t action, uint64_t hashId) {
     NSFileManager *fm = [NSFileManager defaultManager];
     
     if (![fm fileExistsAtPath:filePath]) {
-        _items = [NSMutableArray array];
+        if (!_items) {
+            _items = [NSMutableArray array];
+        }
         return;
     }
     
     NSError *error = nil;
     NSData *data = [NSData dataWithContentsOfFile:filePath options:0 error:&error];
     if (!data || data.length == 0) {
-        _items = [NSMutableArray array];
+        if (!_items) {
+            _items = [NSMutableArray array];
+        }
         return;
     }
     
@@ -97,7 +101,9 @@ static void yna_broadcastCommand(uint8_t action, uint64_t hashId) {
                                                                     format:NULL
                                                                      error:&error];
     if (!plistData || ![plistData isKindOfClass:[NSArray class]]) {
-        _items = [NSMutableArray array];
+        if (!_items) {
+            _items = [NSMutableArray array];
+        }
         return;
     }
     
@@ -155,7 +161,9 @@ static void yna_broadcastCommand(uint8_t action, uint64_t hashId) {
         }
     }
     
-    notify_post(YUNA_CLIPBOARD_NOTIFICATION);
+    if (written) {
+        notify_post(YUNA_CLIPBOARD_NOTIFICATION);
+    }
     return written;
 }
 

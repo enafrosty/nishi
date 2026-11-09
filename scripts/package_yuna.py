@@ -90,23 +90,23 @@ def build_yuna_deb(output_path=None):
     with tarfile.open(fileobj=data_buf, mode="w:gz") as tar:
         # Add rootless directories
         dirs = [
-            "./var",
-            "./var/jb",
-            "./var/jb/Library",
-            "./var/jb/Library/MobileSubstrate",
-            "./var/jb/Library/MobileSubstrate/DynamicLibraries",
-            "./var/jb/Library/PreferenceLoader",
-            "./var/jb/Library/PreferenceLoader/Preferences",
-            "./var/jb/Library/PreferenceBundles",
-            "./var/jb/Library/PreferenceBundles/YunaPrefs.bundle",
-            "./var/jb/Library/Application Support",
-            "./var/jb/Library/Application Support/Yuna",
-            "./var/jb/Library/Application Support/Yuna/Images"
+            ("./var", 0o755),
+            ("./var/jb", 0o755),
+            ("./var/jb/Library", 0o755),
+            ("./var/jb/Library/MobileSubstrate", 0o755),
+            ("./var/jb/Library/MobileSubstrate/DynamicLibraries", 0o755),
+            ("./var/jb/Library/PreferenceLoader", 0o755),
+            ("./var/jb/Library/PreferenceLoader/Preferences", 0o755),
+            ("./var/jb/Library/PreferenceBundles", 0o755),
+            ("./var/jb/Library/PreferenceBundles/YunaPrefs.bundle", 0o755),
+            ("./var/jb/Library/Application Support", 0o755),
+            ("./var/jb/Library/Application Support/Yuna", 0o777),
+            ("./var/jb/Library/Application Support/Yuna/Images", 0o777)
         ]
-        for d in dirs:
+        for d, mode in dirs:
             ti = tarfile.TarInfo(d)
             ti.type = tarfile.DIRTYPE
-            ti.mode = 0o755
+            ti.mode = mode
             ti.mtime = int(time.time())
             tar.addfile(ti)
             
