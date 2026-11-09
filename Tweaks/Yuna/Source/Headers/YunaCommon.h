@@ -10,6 +10,8 @@
 #define YUNA_CLIPBOARD_NOTIFICATION "com.frosty.yuna/ClipboardChanged"
 #define YUNA_EXT_PASTEBOARD_NOTIFICATION "com.frosty.yuna/SystemPasteboardChanged"
 #define YUNA_CMD_NOTIFICATION "com.frosty.yuna/Command"
+#define YUNA_IPC_PASTEBOARD_NAME @"com.frosty.yuna.ipc"
+#define YUNA_IPC_ITEM_TYPE @"com.frosty.yuna.item"
 
 #define YUNA_CMD_TOGGLE_PIN 1
 #define YUNA_CMD_DELETE 2

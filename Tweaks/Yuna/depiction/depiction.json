@@ -70,7 +70,7 @@
         {
           "class": "DepictionTableTextView",
           "title": "Version",
-          "text": "1.0.6"
+          "text": "1.0.7"
         },
         {
           "class": "DepictionTableTextView",
@@ -88,6 +88,17 @@
     {
       "tabname": "Changelog",
       "views": [
+        {
+          "class": "DepictionHeaderView",
+          "title": "Version 1.0.7"
+        },
+        {
+          "class": "DepictionMarkdownView",
+          "markdown": "- **Zero Paste Permission Prompts**: Eliminated background `generalPasteboard` queries in SpringBoard, completely removing the iOS 16 \"Home Screen wants permission to paste\" modal popup.\n- **Unbroken In-App Copying**: Intercepts copied text, URLs, and images directly from copy method arguments inside foreground applications, preventing focus drops or copy cancellations.\n- **SpringBoard Stability & Zero Restarts**: Switched SpringBoard daemon IPC to a dedicated private pasteboard channel on a background worker queue with thread-safe `UIGraphicsImageRenderer`, eliminating main-thread watchdog timeouts (0x8badf00d) and Jetsam memory kills."
+        },
+        {
+          "class": "DepictionSeparatorView"
+        },
         {
           "class": "DepictionHeaderView",
           "title": "Version 1.0.6"

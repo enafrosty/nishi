@@ -251,6 +251,16 @@ def test_universal_clipboard_audit():
     assert "YUNA_CMD_TOGGLE_PIN" in common_src, "Must define YUNA_CMD_TOGGLE_PIN"
     assert "YUNA_CMD_DELETE" in common_src, "Must define YUNA_CMD_DELETE"
     assert "YUNA_CMD_CLEAR_UNPINNED" in common_src, "Must define YUNA_CMD_CLEAR_UNPINNED"
+    assert "YUNA_IPC_PASTEBOARD_NAME" in common_src, "Must define YUNA_IPC_PASTEBOARD_NAME for private inter-process sync"
+    assert "YUNA_IPC_ITEM_TYPE" in common_src, "Must define YUNA_IPC_ITEM_TYPE"
+
+    server_m = os.path.join(YUNA_DIR, "Source", "YunaServer.m")
+    with open(server_m, "r", encoding="utf-8") as f:
+        server_src = f.read()
+    assert "com.apple.Pasteboard.pasteboardChanged" not in server_src, \
+        "SpringBoard must NOT eavesdrop on general pasteboard to eliminate iOS 16 paste prompt and watchdog hangs!"
+    assert "[UIPasteboard generalPasteboard]" not in server_src, \
+        "SpringBoard daemon must NOT read generalPasteboard directly to prevent privacy banners and main-thread hangs!"
 
     storage_m = os.path.join(YUNA_DIR, "Source", "YunaStorage.m")
     with open(storage_m, "r", encoding="utf-8") as f:

@@ -33,27 +33,24 @@
     if (size.width > maxDim || size.height > maxDim) {
         CGFloat scale = (size.width > size.height) ? (maxDim / size.width) : (maxDim / size.height);
         CGSize targetSize = CGSizeMake(floor(size.width * scale), floor(size.height * scale));
-        UIGraphicsBeginImageContextWithOptions(targetSize, NO, 1.0);
-        [image drawInRect:CGRectMake(0, 0, targetSize.width, targetSize.height)];
-        thumb = UIGraphicsGetImageFromCurrentImageContext();
-        UIGraphicsEndImageContext();
+        
+        UIGraphicsImageRendererFormat *format = [UIGraphicsImageRendererFormat defaultFormat];
+        format.scale = 1.0;
+        UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithSize:targetSize format:format];
+        thumb = [renderer imageWithActions:^(UIGraphicsImageRendererContext * _Nonnull context) {
+            [image drawInRect:CGRectMake(0, 0, targetSize.width, targetSize.height)];
+        }];
     }
     
     NSData *thumbData = UIImageJPEGRepresentation(thumb, 0.7);
+    if (!thumbData || thumbData.length == 0) return nil;
     NSString *b64 = [thumbData base64EncodedStringWithOptions:0];
-    
-    NSData *fullData = UIImageJPEGRepresentation(image, 0.85);
-    if (!fullData) fullData = thumbData;
-    
-    NSError *err = nil;
-    NSString *fileName = [[YunaStorage sharedInstance] saveImageData:fullData error:&err];
     
     YunaItem *item = [[YunaItem alloc] init];
     item.type = YunaItemTypeImage;
-    item.imageRelativePath = fileName;
     item.imageBase64 = b64;
     item.title = @"Image";
-    item.itemSize = fullData.length;
+    item.itemSize = thumbData.length;
     return item;
 }
 

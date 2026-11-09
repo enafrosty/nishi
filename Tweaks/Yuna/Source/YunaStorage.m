@@ -244,9 +244,11 @@ static void yna_broadcastCommand(uint8_t action, uint64_t hashId) {
                         return;
                     }
                 } else if (newItem.type == YunaItemTypeImage) {
-                    if (existing.imageRelativePath && newItem.imageRelativePath &&
-                        [existing.imageRelativePath isEqualToString:newItem.imageRelativePath]) {
-                        // Same image SHA-256 hash copied again
+                    if ((existing.imageRelativePath && newItem.imageRelativePath &&
+                         [existing.imageRelativePath isEqualToString:newItem.imageRelativePath]) ||
+                        (existing.imageBase64 && newItem.imageBase64 &&
+                         [existing.imageBase64 isEqualToString:newItem.imageBase64])) {
+                        // Same image copied again
                         existing.timestamp = [[NSDate date] timeIntervalSince1970];
                         [self _lockedPruneItems];
                         [self _lockedSaveToDisk];

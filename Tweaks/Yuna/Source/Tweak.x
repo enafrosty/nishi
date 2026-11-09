@@ -65,54 +65,83 @@ static inline BOOL yna_isSpringBoardProcess(void) {
     return isSB;
 }
 
-static void yna_recordPasteboardItem(UIPasteboard *pb) {
-    if (!pb) return;
+static void yna_dispatchItemToIPC(YunaItem *item) {
+    if (!item) return;
     @autoreleasepool {
         YunaSettingsHelper *settings = [YunaSettingsHelper sharedHelper];
         if (!settings.enabled) return;
         
-        YunaStorage *storage = [YunaStorage sharedInstance];
+        if (item.type == YunaItemTypeImage && !settings.saveImages) return;
+        if (item.type == YunaItemTypeFile && !settings.saveFiles) return;
         
-        // 1. Image
-        if (settings.saveImages && (pb.hasImages || [pb containsPasteboardTypes:@[@"public.png", @"public.jpeg", @"public.tiff"]])) {
-            UIImage *img = pb.image;
-            if (img) {
-                [storage addItem:[YunaItem itemWithImage:img]];
-                return;
+        // Add to local memory for instant 0ms latency in current process's keyboard dock
+        [[YunaStorage sharedInstance] addItem:item];
+        
+        if (yna_isSpringBoardProcess()) {
+            return;
+        }
+        
+        // Sandboxed client app: serialize and transmit to SpringBoard via custom named IPC pasteboard
+        NSDictionary *dict = [item dictionaryRepresentation];
+        if (!dict) return;
+        
+        NSError *err = nil;
+        NSData *data = [NSPropertyListSerialization dataWithPropertyList:dict
+                                                                  format:NSPropertyListBinaryFormat_v1_0
+                                                                 options:0
+                                                                   error:&err];
+        if (!data || data.length == 0) return;
+        
+        UIPasteboard *ipcPB = [UIPasteboard pasteboardWithName:YUNA_IPC_PASTEBOARD_NAME create:YES];
+        if (ipcPB) {
+            [ipcPB setData:data forPasteboardType:YUNA_IPC_ITEM_TYPE];
+            notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
+        }
+    }
+}
+
+static YunaItem *yna_extractItemFromItemsArray(NSArray *items) {
+    if (!items || items.count == 0) return nil;
+    for (id itemObj in items) {
+        if (![itemObj isKindOfClass:[NSDictionary class]]) continue;
+        NSDictionary *dict = (NSDictionary *)itemObj;
+        
+        // 1. Text
+        for (NSString *key in @[@"public.utf8-plain-text", @"public.plain-text", @"NSStringPboardType"]) {
+            id val = dict[key];
+            if ([val isKindOfClass:[NSString class]] && [(NSString *)val length] > 0) {
+                return [YunaItem itemWithText:(NSString *)val];
+            } else if ([val isKindOfClass:[NSData class]]) {
+                NSString *str = [[NSString alloc] initWithData:(NSData *)val encoding:NSUTF8StringEncoding];
+                if (str && str.length > 0) {
+                    return [YunaItem itemWithText:str];
+                }
             }
         }
         
-        // 2. URL or file
-        if (settings.saveFiles && (pb.hasURLs || pb.URL != nil)) {
-            NSURL *url = pb.URL;
-            if (url) {
-                if ([url isFileURL]) {
-                    NSNumber *fileSize = nil;
-                    [url getResourceValue:&fileSize forKey:NSURLFileSizeKey error:nil];
-                    [storage addItem:[YunaItem itemWithFileURL:url size:[fileSize unsignedIntegerValue]]];
-                } else {
-                    [storage addItem:[YunaItem itemWithURL:url]];
-                }
-                return;
+        // 2. URL
+        for (NSString *key in @[@"public.url", @"NSURLPboardType"]) {
+            id val = dict[key];
+            if ([val isKindOfClass:[NSURL class]]) {
+                return [YunaItem itemWithURL:(NSURL *)val];
+            } else if ([val isKindOfClass:[NSString class]]) {
+                NSURL *u = [NSURL URLWithString:(NSString *)val];
+                if (u && u.host) return [YunaItem itemWithURL:u];
             }
         }
         
-        // 3. String
-        if (pb.hasStrings || pb.string.length > 0) {
-            NSString *str = pb.string;
-            if (str && [str stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]].length > 0) {
-                if ([str hasPrefix:@"http://"] || [str hasPrefix:@"https://"]) {
-                    NSURL *candURL = [NSURL URLWithString:str];
-                    if (candURL && candURL.host) {
-                        [storage addItem:[YunaItem itemWithURL:candURL]];
-                        return;
-                    }
-                }
-                [storage addItem:[YunaItem itemWithText:str]];
-                return;
+        // 3. Image
+        for (NSString *key in @[@"public.png", @"public.jpeg", @"public.tiff"]) {
+            id val = dict[key];
+            if ([val isKindOfClass:[UIImage class]]) {
+                return [YunaItem itemWithImage:(UIImage *)val];
+            } else if ([val isKindOfClass:[NSData class]]) {
+                UIImage *img = [UIImage imageWithData:(NSData *)val];
+                if (img) return [YunaItem itemWithImage:img];
             }
         }
     }
+    return nil;
 }
 
 %hook UIKeyboardLayoutStar
@@ -155,113 +184,110 @@ static void yna_recordPasteboardItem(UIPasteboard *pb) {
 
 - (void)setString:(NSString *)string {
     %orig;
-    if (yna_isSpringBoardProcess() && string && string.length > 0) {
-        [[YunaStorage sharedInstance] addItem:[YunaItem itemWithText:string]];
+    if (string && string.length > 0) {
+        yna_dispatchItemToIPC([YunaItem itemWithText:string]);
     }
-    notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
 }
 
 - (void)setStrings:(NSArray<NSString *> *)strings {
     %orig;
-    if (yna_isSpringBoardProcess() && strings.firstObject && strings.firstObject.length > 0) {
-        [[YunaStorage sharedInstance] addItem:[YunaItem itemWithText:strings.firstObject]];
+    if (strings.firstObject && strings.firstObject.length > 0) {
+        yna_dispatchItemToIPC([YunaItem itemWithText:strings.firstObject]);
     }
-    notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
 }
 
 - (void)setImage:(UIImage *)image {
     %orig;
-    if (yna_isSpringBoardProcess() && image) {
-        [[YunaStorage sharedInstance] addItem:[YunaItem itemWithImage:image]];
+    if (image) {
+        yna_dispatchItemToIPC([YunaItem itemWithImage:image]);
     }
-    notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
 }
 
 - (void)setImages:(NSArray<UIImage *> *)images {
     %orig;
-    if (yna_isSpringBoardProcess() && images.firstObject) {
-        [[YunaStorage sharedInstance] addItem:[YunaItem itemWithImage:images.firstObject]];
+    if (images.firstObject) {
+        yna_dispatchItemToIPC([YunaItem itemWithImage:images.firstObject]);
     }
-    notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
 }
 
 - (void)setURL:(NSURL *)url {
     %orig;
-    if (yna_isSpringBoardProcess() && url) {
+    if (url) {
         if ([url isFileURL]) {
             NSNumber *fileSize = nil;
             [url getResourceValue:&fileSize forKey:NSURLFileSizeKey error:nil];
-            [[YunaStorage sharedInstance] addItem:[YunaItem itemWithFileURL:url size:[fileSize unsignedIntegerValue]]];
+            yna_dispatchItemToIPC([YunaItem itemWithFileURL:url size:[fileSize unsignedIntegerValue]]);
         } else {
-            [[YunaStorage sharedInstance] addItem:[YunaItem itemWithURL:url]];
+            yna_dispatchItemToIPC([YunaItem itemWithURL:url]);
         }
     }
-    notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
 }
 
 - (void)setURLs:(NSArray<NSURL *> *)urls {
     %orig;
-    if (yna_isSpringBoardProcess() && urls.firstObject) {
+    if (urls.firstObject) {
         NSURL *url = urls.firstObject;
         if ([url isFileURL]) {
             NSNumber *fileSize = nil;
             [url getResourceValue:&fileSize forKey:NSURLFileSizeKey error:nil];
-            [[YunaStorage sharedInstance] addItem:[YunaItem itemWithFileURL:url size:[fileSize unsignedIntegerValue]]];
+            yna_dispatchItemToIPC([YunaItem itemWithFileURL:url size:[fileSize unsignedIntegerValue]]);
         } else {
-            [[YunaStorage sharedInstance] addItem:[YunaItem itemWithURL:url]];
+            yna_dispatchItemToIPC([YunaItem itemWithURL:url]);
         }
     }
-    notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
 }
 
 - (void)setItems:(NSArray *)items {
     %orig;
-    if (yna_isSpringBoardProcess()) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            yna_recordPasteboardItem(self);
-        });
+    YunaItem *item = yna_extractItemFromItemsArray(items);
+    if (item) {
+        yna_dispatchItemToIPC(item);
     }
-    notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
 }
 
 - (void)setItems:(NSArray *)items options:(NSDictionary *)options {
     %orig;
-    if (yna_isSpringBoardProcess()) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            yna_recordPasteboardItem(self);
-        });
+    YunaItem *item = yna_extractItemFromItemsArray(items);
+    if (item) {
+        yna_dispatchItemToIPC(item);
     }
-    notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
 }
 
 - (void)setValue:(id)value forPasteboardType:(NSString *)pasteboardType {
     %orig;
-    if (yna_isSpringBoardProcess()) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            yna_recordPasteboardItem(self);
-        });
+    if ([value isKindOfClass:[NSString class]] && [(NSString *)value length] > 0) {
+        yna_dispatchItemToIPC([YunaItem itemWithText:(NSString *)value]);
+    } else if ([value isKindOfClass:[NSURL class]]) {
+        yna_dispatchItemToIPC([YunaItem itemWithURL:(NSURL *)value]);
+    } else if ([value isKindOfClass:[UIImage class]]) {
+        yna_dispatchItemToIPC([YunaItem itemWithImage:(UIImage *)value]);
     }
-    notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
 }
 
 - (void)setData:(NSData *)data forPasteboardType:(NSString *)pasteboardType {
     %orig;
-    if (yna_isSpringBoardProcess()) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            yna_recordPasteboardItem(self);
-        });
+    if (data && data.length > 0 && ([pasteboardType containsString:@"text"] || [pasteboardType containsString:@"string"] || [pasteboardType containsString:@"plain"])) {
+        NSString *str = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+        if (str && str.length > 0) {
+            yna_dispatchItemToIPC([YunaItem itemWithText:str]);
+        }
     }
-    notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
 }
 
 - (void)setObjects:(NSArray *)objects {
     %orig;
-    if (yna_isSpringBoardProcess()) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            yna_recordPasteboardItem(self);
-        });
+    for (id obj in objects) {
+        if ([obj isKindOfClass:[NSString class]] && [(NSString *)obj length] > 0) {
+            yna_dispatchItemToIPC([YunaItem itemWithText:(NSString *)obj]);
+            break;
+        } else if ([obj isKindOfClass:[NSURL class]]) {
+            yna_dispatchItemToIPC([YunaItem itemWithURL:(NSURL *)obj]);
+            break;
+        } else if ([obj isKindOfClass:[UIImage class]]) {
+            yna_dispatchItemToIPC([YunaItem itemWithImage:(UIImage *)obj]);
+            break;
+        }
     }
-    notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
 }
 
 %end
@@ -414,39 +440,7 @@ static void yna_recordPasteboardItem(UIPasteboard *pb) {
 %new
 - (void)yna_syncCurrentPasteboard {
     @autoreleasepool {
-        UIPasteboard *pb = [UIPasteboard generalPasteboard];
-        if (!pb) return;
-        
-        YunaStorage *storage = [YunaStorage sharedInstance];
-        [storage reloadFromDisk];
-        
-        BOOL needsSync = NO;
-        if (pb.hasStrings && pb.string && pb.string.length > 0) {
-            NSString *str = pb.string;
-            YunaItem *top = [storage allItems].firstObject;
-            if (!top || top.type != YunaItemTypeText || ![top.text isEqualToString:str]) {
-                needsSync = YES;
-            }
-        } else if (pb.hasImages && pb.image) {
-            YunaItem *top = [storage allItems].firstObject;
-            if (!top || top.type != YunaItemTypeImage) {
-                needsSync = YES;
-            }
-        } else if (pb.hasURLs && pb.URL) {
-            NSURL *url = pb.URL;
-            YunaItem *top = [storage allItems].firstObject;
-            if (!top || top.type != YunaItemTypeURL || ![top.fileURLString isEqualToString:url.absoluteString]) {
-                needsSync = YES;
-            }
-        }
-        
-        if (needsSync) {
-            if (yna_isSpringBoardProcess()) {
-                yna_recordPasteboardItem(pb);
-            } else {
-                notify_post(YUNA_EXT_PASTEBOARD_NOTIFICATION);
-            }
-        }
+        [[YunaStorage sharedInstance] reloadFromDisk];
     }
 }
 
