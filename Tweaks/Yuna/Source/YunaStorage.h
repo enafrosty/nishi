@@ -11,6 +11,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)sharedInstance;
 
 - (void)reloadFromDisk;
+- (void)reloadFromDiskIfModifiedExternally;
 
 - (NSArray<YunaItem *> *)allItems;
 - (NSArray<YunaItem *> *)pinnedItems;

@@ -223,7 +223,7 @@
             <key>label</key>
             <string>About</string>
             <key>footerText</key>
-            <string>Yuna v1.0.0 • Rootless tweak for Dopamine (arm64 &amp; arm64e)&#10;Part of the Nishi repository by frosty</string>
+            <string>Yuna v1.0.8 • Rootless tweak for Dopamine (arm64 &amp; arm64e)&#10;Part of the Nishi repository by frosty</string>
         </dict>
     </array>
     <key>title</key>

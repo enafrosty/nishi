@@ -1,24 +1,6 @@
 Package: com.frosty.yuna
 Name: Yuna
-Version: 1.0.0
-Architecture: iphoneos-arm64
-Maintainer: frosty
-Author: frosty
-Section: Tweaks
-Depends: mobilesubstrate (>= 0.9.5000), ellekit, preferenceloader, firmware (>= 15.0)
-Tag: purpose::extension, role::developer, compatible::ios15, compatible::ios16
-SileoDepiction: https://nishi.heyfrosty.space/Tweaks/Yuna/depiction/depiction.json
-Icon: https://nishi.heyfrosty.space/Tweaks/Yuna/depiction/icon.png
-Filename: debs/com.frosty.yuna_1.0.0_iphoneos-arm64.deb
-Size: 2788
-MD5sum: c82fe0c346b8928592888afdac9cf552
-SHA1: de24debde3eb26f6e45f583b8897263f51953959
-SHA256: 3a767661170b4212b5a67394b36e899046e80c6cc4a60e5c3474dafc099984a5
-Description: Universal clipboard button in the keyboard for text, images, and files with pinning and customizable row management.
-
-Package: com.frosty.yuna
-Name: Yuna
-Version: 1.0.1
+Version: 1.0.8
 Architecture: iphoneos-arm64
 Maintainer: frosty
 Author: frosty
@@ -27,120 +9,10 @@ Depends: mobilesubstrate (>= 0.9.5000), ellekit, preferenceloader, firmware (>= 
 Tag: purpose::extension, role::developer, compatible::ios15, compatible::ios16, cydia::respring
 SileoDepiction: https://nishi.heyfrosty.space/Tweaks/Yuna/depiction/depiction.json
 Icon: https://nishi.heyfrosty.space/Tweaks/Yuna/depiction/icon.png
-Filename: debs/com.frosty.yuna_1.0.1_iphoneos-arm64.deb
-Size: 57094
-MD5sum: 18479189ea6d8c2aaa6fa9e7687b76a4
-SHA1: 41475289ee9d9e12101f2511b7eb31792f638e95
-SHA256: 7f6f168afc8aaa8d24b518ca17d45a141fb84eff57cf0f6f06f4c756483f3cb2
-Description: Universal clipboard button in the keyboard for text, images, and files with pinning and customizable row management.
-Installed-Size: 528
-
-Package: com.frosty.yuna
-Name: Yuna
-Version: 1.0.2
-Architecture: iphoneos-arm64
-Maintainer: frosty
-Author: frosty
-Section: Tweaks
-Depends: mobilesubstrate (>= 0.9.5000), ellekit, preferenceloader, firmware (>= 15.0)
-Tag: purpose::extension, role::developer, compatible::ios15, compatible::ios16, cydia::respring
-SileoDepiction: https://nishi.heyfrosty.space/Tweaks/Yuna/depiction/depiction.json
-Icon: https://nishi.heyfrosty.space/Tweaks/Yuna/depiction/icon.png
-Filename: debs/com.frosty.yuna_1.0.2_iphoneos-arm64.deb
-Size: 60526
-MD5sum: c41ea6ffa7d7d34fb0ffbad3c07345ce
-SHA1: d848f00b00fedde9604333625007f39c5029732e
-SHA256: 3b7ebc6a39ebb451637e454fead3a1676459a61bc220f90c653218de4ff82dcd
-Description: Universal clipboard button in the keyboard for text, images, and files with pinning and customizable row management.
-Installed-Size: 528
-
-Package: com.frosty.yuna
-Name: Yuna
-Version: 1.0.3
-Architecture: iphoneos-arm64
-Maintainer: frosty
-Author: frosty
-Section: Tweaks
-Depends: mobilesubstrate (>= 0.9.5000), ellekit, preferenceloader, firmware (>= 15.0)
-Tag: purpose::extension, role::developer, compatible::ios15, compatible::ios16, cydia::respring
-SileoDepiction: https://nishi.heyfrosty.space/Tweaks/Yuna/depiction/depiction.json
-Icon: https://nishi.heyfrosty.space/Tweaks/Yuna/depiction/icon.png
-Filename: debs/com.frosty.yuna_1.0.3_iphoneos-arm64.deb
-Size: 2726
-MD5sum: 0942ae25f2829436f4ea70d38d5a10ba
-SHA1: c47ec0ff86cec0e4d15e0931ad23a6fd968a490a
-SHA256: 270263b9b68a539b75dab1b179a336cb40aaad9e448b4ff8edaf83db13fc87ce
-Description: Universal clipboard button in the keyboard for text, images, and files with pinning and customizable row management.
-
-Package: com.frosty.yuna
-Name: Yuna
-Version: 1.0.4
-Architecture: iphoneos-arm64
-Maintainer: frosty
-Author: frosty
-Section: Tweaks
-Depends: mobilesubstrate (>= 0.9.5000), ellekit, preferenceloader, firmware (>= 15.0)
-Tag: purpose::extension, role::developer, compatible::ios15, compatible::ios16, cydia::respring
-SileoDepiction: https://nishi.heyfrosty.space/Tweaks/Yuna/depiction/depiction.json
-Icon: https://nishi.heyfrosty.space/Tweaks/Yuna/depiction/icon.png
-Filename: debs/com.frosty.yuna_1.0.4_iphoneos-arm64.deb
-Size: 2462
-MD5sum: 7e78d1c1cf57ab625573be621b14effd
-SHA1: 243f5bf0b225f128ef964599746b1fc350ec5d98
-SHA256: 716af1c87ec7e1ea0e2da09d59fc1cfb722859ea7f9d9470a4e061058ec33bd7
-Description: Universal clipboard button in the keyboard for text, images, and files with pinning and customizable row management.
-
-Package: com.frosty.yuna
-Name: Yuna
-Version: 1.0.5
-Architecture: iphoneos-arm64
-Maintainer: frosty
-Author: frosty
-Section: Tweaks
-Depends: mobilesubstrate (>= 0.9.5000), ellekit, preferenceloader, firmware (>= 15.0)
-Tag: purpose::extension, role::developer, compatible::ios15, compatible::ios16, cydia::respring
-SileoDepiction: https://nishi.heyfrosty.space/Tweaks/Yuna/depiction/depiction.json
-Icon: https://nishi.heyfrosty.space/Tweaks/Yuna/depiction/icon.png
-Filename: debs/com.frosty.yuna_1.0.5_iphoneos-arm64.deb
-Size: 2462
-MD5sum: a259de80dacc8a1840566ca747f5ce34
-SHA1: 22bfa75652227e892685ac7c517ddbd851ef722e
-SHA256: 735bab9e1272e421dd2e1aa42f4be1f43e315be0e767933a25f0476ae3588638
-Description: Universal clipboard button in the keyboard for text, images, and files with pinning and customizable row management.
-
-Package: com.frosty.yuna
-Name: Yuna
-Version: 1.0.6
-Architecture: iphoneos-arm64
-Maintainer: frosty
-Author: frosty
-Section: Tweaks
-Depends: mobilesubstrate (>= 0.9.5000), ellekit, preferenceloader, firmware (>= 15.0)
-Tag: purpose::extension, role::developer, compatible::ios15, compatible::ios16, cydia::respring
-SileoDepiction: https://nishi.heyfrosty.space/Tweaks/Yuna/depiction/depiction.json
-Icon: https://nishi.heyfrosty.space/Tweaks/Yuna/depiction/icon.png
-Filename: debs/com.frosty.yuna_1.0.6_iphoneos-arm64.deb
-Size: 2636
-MD5sum: 4109af619597cf377e9e69b7348f238c
-SHA1: afd0dada20152a2b9176ad3d99568eca6d579ddb
-SHA256: 0a4cf1b10b0e6cdf9b4bcf9deb2b74cc56e2bb5fb65d1f2a913488d43dbac914
-Description: Universal clipboard button in the keyboard for text, images, and files with pinning and customizable row management.
-
-Package: com.frosty.yuna
-Name: Yuna
-Version: 1.0.7
-Architecture: iphoneos-arm64
-Maintainer: frosty
-Author: frosty
-Section: Tweaks
-Depends: mobilesubstrate (>= 0.9.5000), ellekit, preferenceloader, firmware (>= 15.0)
-Tag: purpose::extension, role::developer, compatible::ios15, compatible::ios16, cydia::respring
-SileoDepiction: https://nishi.heyfrosty.space/Tweaks/Yuna/depiction/depiction.json
-Icon: https://nishi.heyfrosty.space/Tweaks/Yuna/depiction/icon.png
-Filename: debs/com.frosty.yuna_1.0.7_iphoneos-arm64.deb
+Filename: debs/com.frosty.yuna_1.0.8_iphoneos-arm64.deb
 Size: 2638
-MD5sum: 198b36fff9c39f1be9cad07b9d19ab1c
-SHA1: 46bf9511f9610ec13f85ebfe560b5862fe09635b
-SHA256: 7d685274a2a008d9fa00f291021dd4649ac95684aff27a1208fc8205778ae18d
+MD5sum: 024967d7fa286d96c517aafbae0be311
+SHA1: f9545c50012e9ca8956c8cefb70446dfba1a5b78
+SHA256: ca37bb982ef69301cb3525c46cc712deb056e79ed5a727d341ef7f84e179528c
 Description: Universal clipboard button in the keyboard for text, images, and files with pinning and customizable row management.
 

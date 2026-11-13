@@ -51,8 +51,7 @@ typedef NS_ENUM(NSInteger, YunaFilterTab) {
 }
 
 - (void)dealloc {
-    notify_cancel(_clipboardNotifyToken);
-    notify_cancel(_prefsNotifyToken);
+    [self unregisterNotifications];
 }
 
 - (void)setupUI {
@@ -144,15 +143,31 @@ typedef NS_ENUM(NSInteger, YunaFilterTab) {
 }
 
 - (void)registerNotifications {
+    __weak typeof(self) weakSelf = self;
     notify_register_dispatch(YUNA_CLIPBOARD_NOTIFICATION, &_clipboardNotifyToken, dispatch_get_main_queue(), ^(int token) {
+        YunaPanelView *strongSelf = weakSelf;
+        if (!strongSelf) return;
         [[YunaStorage sharedInstance] reloadFromDisk];
-        [self reloadData];
+        [strongSelf reloadData];
     });
     
     notify_register_dispatch(YUNA_PREFS_NOTIFICATION, &_prefsNotifyToken, dispatch_get_main_queue(), ^(int token) {
-        [self.collectionView.collectionViewLayout invalidateLayout];
-        [self.collectionView reloadData];
+        YunaPanelView *strongSelf = weakSelf;
+        if (!strongSelf) return;
+        [strongSelf.collectionView.collectionViewLayout invalidateLayout];
+        [strongSelf.collectionView reloadData];
     });
+}
+
+- (void)unregisterNotifications {
+    if (_clipboardNotifyToken > 0) {
+        notify_cancel(_clipboardNotifyToken);
+        _clipboardNotifyToken = 0;
+    }
+    if (_prefsNotifyToken > 0) {
+        notify_cancel(_prefsNotifyToken);
+        _prefsNotifyToken = 0;
+    }
 }
 
 - (void)filterChanged:(UISegmentedControl *)sender {
@@ -248,7 +263,9 @@ typedef NS_ENUM(NSInteger, YunaFilterTab) {
         NSString *textToInsert = item.text ?: @"";
         
         // 1. Always sync to system pasteboard first so snippet is immediately pasteable anywhere
+        YunaSetInternalPasteboardWrite(YES);
         [[UIPasteboard generalPasteboard] setString:textToInsert];
+        YunaSetInternalPasteboardWrite(NO);
         
         // 2. Direct insertion via UIKeyboardImpl or its active text delegate
         Class kbClass = NSClassFromString(@"UIKeyboardImpl");
@@ -272,13 +289,17 @@ typedef NS_ENUM(NSInteger, YunaFilterTab) {
     } else if (item.type == YunaItemTypeImage) {
         UIImage *img = [item loadImage];
         if (img) {
+            YunaSetInternalPasteboardWrite(YES);
             [[UIPasteboard generalPasteboard] setImage:img];
+            YunaSetInternalPasteboardWrite(NO);
         }
     } else if (item.type == YunaItemTypeFile) {
         if (item.fileURLString) {
             NSURL *url = [NSURL URLWithString:item.fileURLString];
             if (url) {
+                YunaSetInternalPasteboardWrite(YES);
                 [[UIPasteboard generalPasteboard] setURL:url];
+                YunaSetInternalPasteboardWrite(NO);
             }
         }
     }
@@ -446,6 +467,7 @@ typedef NS_ENUM(NSInteger, YunaFilterTab) {
 }
 
 - (void)dismissAnimated:(BOOL)animated {
+    [self unregisterNotifications];
     if (!animated) {
         [self removeFromSuperview];
         if ([self.delegate respondsToSelector:@selector(yunaPanelViewDidRequestDismiss:)]) {

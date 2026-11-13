@@ -12,10 +12,21 @@
 #define YUNA_CMD_NOTIFICATION "com.frosty.yuna/Command"
 #define YUNA_IPC_PASTEBOARD_NAME @"com.frosty.yuna.ipc"
 #define YUNA_IPC_ITEM_TYPE @"com.frosty.yuna.item"
+#define YUNA_IPC_TCP_PORT 49871
+#define YUNA_IPC_SLOT_COUNT 30
 
 #define YUNA_CMD_TOGGLE_PIN 1
 #define YUNA_CMD_DELETE 2
 #define YUNA_CMD_CLEAR_UNPINNED 3
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+void YunaSetInternalPasteboardWrite(BOOL flag);
+BOOL YunaIsInternalPasteboardWrite(void);
+#ifdef __cplusplus
+}
+#endif
 
 #define YUNA_STORAGE_PATH [NSString stringWithUTF8String:JBROOT_PATH("/Library/Application Support/Yuna")]
 #define YUNA_HISTORY_FILE [YUNA_STORAGE_PATH stringByAppendingPathComponent:@"history.plist"]

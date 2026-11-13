@@ -259,8 +259,8 @@ def test_universal_clipboard_audit():
         server_src = f.read()
     assert "com.apple.Pasteboard.pasteboardChanged" not in server_src, \
         "SpringBoard must NOT eavesdrop on general pasteboard to eliminate iOS 16 paste prompt and watchdog hangs!"
-    assert "[UIPasteboard generalPasteboard]" not in server_src, \
-        "SpringBoard daemon must NOT read generalPasteboard directly to prevent privacy banners and main-thread hangs!"
+    assert "UIPasteboard" not in server_src, \
+        "SpringBoard daemon must NOT touch UIPasteboard directly (not even named pasteboards) to prevent iOS 16 paste permission prompts and copy cancellations!"
 
     storage_m = os.path.join(YUNA_DIR, "Source", "YunaStorage.m")
     with open(storage_m, "r", encoding="utf-8") as f:

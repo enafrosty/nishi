@@ -5,6 +5,7 @@ Generates Packages, Packages.gz, and Release index files for the Nishi rootless 
 """
 
 import os
+import re
 import sys
 import hashlib
 import gzip
@@ -118,6 +119,22 @@ def collect_built_packages():
                         shutil.copy2(src, dst)
                         print(f"[*] Imported deb: {fname} -> debs/")
 
+def _parse_version_key(version):
+    """Return a comparable tuple for Debian-style version strings."""
+    tokens = []
+    for seg in re.split(r"[.\-+]", version or "0"):
+        if not seg:
+            continue
+        for sub in re.findall(r"~|\d+|[^~\d]+", seg):
+            if sub == "~":
+                tokens.append((-1, 0, ""))
+            elif sub.isdigit():
+                tokens.append((1, int(sub), ""))
+            else:
+                tokens.append((0, 0, sub))
+    tokens.append((0, 0, ""))
+    return tuple(tokens)
+
 def build_repo():
     collect_built_packages()
     os.makedirs(DEBS_DIR, exist_ok=True)
@@ -132,10 +149,10 @@ def build_repo():
             import package_yuna
             package_yuna.build_yuna_deb()
         deb_files = [f for f in os.listdir(DEBS_DIR) if f.endswith(".deb")]
-    
-    package_entries = []
+
+    candidates = []
     print(f"[*] Scanning {len(deb_files)} package(s) in {DEBS_DIR}...")
-    
+
     for deb in sorted(deb_files):
         deb_path = os.path.join(DEBS_DIR, deb)
         try:
@@ -145,7 +162,7 @@ def build_repo():
                 continue
             fields = parse_control(ctrl_text)
             hashes = get_hashes(deb_path)
-            
+
             # Add relative filename and hashes
             fields["Filename"] = f"debs/{deb}"
             fields["Size"] = str(hashes["size"])
@@ -154,19 +171,35 @@ def build_repo():
             fields["SHA256"] = hashes["sha256"]
             if fields.get("Package") == "com.frosty.yuna" and "Icon" not in fields:
                 fields["Icon"] = "https://nishi.heyfrosty.space/Tweaks/Yuna/depiction/icon.png"
-            
-            package_entries.append(format_control(fields))
-            print(f"    + Added {fields.get('Package', deb)} ({fields.get('Version', '?')})")
+
+            ver = fields.get("Version", "0")
+            candidates.append((_parse_version_key(ver), hashes["size"], os.path.getmtime(deb_path), deb, fields))
         except Exception as e:
             print(f"[!] Error processing {deb}: {e}")
-            
+
+    # Sort descending by version (tie-break by mtime/size/name) and keep only the latest per package
+    candidates.sort(key=lambda item: (item[0], item[2], item[1], item[3]), reverse=True)
+    package_entries = []
+    kept_debs = set()
+    seen_packages = set()
+
+    for _, _, _, deb, fields in candidates:
+        pkg_id = fields.get("Package", deb)
+        if pkg_id in seen_packages:
+            print(f"    - Skipping older version {pkg_id} ({fields.get('Version', '?')}) in {deb}")
+            continue
+        seen_packages.add(pkg_id)
+        kept_debs.add(deb)
+        package_entries.append(format_control(fields))
+        print(f"    + Added {pkg_id} ({fields.get('Version', '?')})")
+
     # Write Packages
     packages_content = "".join(package_entries)
     packages_path = os.path.join(DIST_DIR, "Packages")
     with open(packages_path, "w", encoding="utf-8") as f:
         f.write(packages_content)
     print(f"[*] Wrote {packages_path} ({len(packages_content)} bytes)")
-    
+
     # Write Packages.gz (gzip)
     packages_gz_path = os.path.join(DIST_DIR, "Packages.gz")
     with gzip.open(packages_gz_path, "wb") as f:
@@ -184,12 +217,19 @@ def build_repo():
     with lzma.open(packages_xz_path, "wb") as f:
         f.write(packages_content.encode("utf-8"))
     print(f"[*] Wrote {packages_xz_path}")
-    
-    # Mirror deb files to root directory to prevent any 404s if clients request root path
-    for deb in deb_files:
+
+    # Remove stale root .deb files and mirror active debs to root directory
+    for entry in os.listdir(DIST_DIR):
+        if entry.endswith(".deb") and entry not in kept_debs:
+            stale_path = os.path.join(DIST_DIR, entry)
+            if os.path.isfile(stale_path):
+                os.remove(stale_path)
+                print(f"[*] Removed stale root deb: {entry}")
+
+    for deb in sorted(kept_debs):
         src = os.path.join(DEBS_DIR, deb)
         dst = os.path.join(DIST_DIR, deb)
-        if not os.path.exists(dst) or os.path.getmtime(src) > os.path.getmtime(dst):
+        if not os.path.exists(dst) or os.path.getsize(src) != os.path.getsize(dst) or os.path.getmtime(src) > os.path.getmtime(dst):
             shutil.copy2(src, dst)
             print(f"[*] Mirrored deb to root: {deb}")
 

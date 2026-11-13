@@ -70,7 +70,7 @@
         {
           "class": "DepictionTableTextView",
           "title": "Version",
-          "text": "1.0.7"
+          "text": "1.0.8"
         },
         {
           "class": "DepictionTableTextView",
@@ -88,6 +88,14 @@
     {
       "tabname": "Changelog",
       "views": [
+        {
+          "class": "DepictionHeaderView",
+          "title": "Version 1.0.8"
+        },
+        {
+          "class": "DepictionMarkdownView",
+          "markdown": "- **Zero UIPasteboard in SpringBoard**: Replaced the legacy private `UIPasteboard` IPC channel in SpringBoard with a loopback TCP + 64-bit Darwin state-ring bridge, completely eliminating iOS 16 \"Home Screen wants permission to paste\" prompts.\n- **Reliable Copying & Zero-Loss Storage**: Added general-pasteboard scoping, re-entrancy guards, `NSItemProvider` / `setObjects:` hooks, and unsynced local item merging so sandboxed apps never lose copied items or cancel copies.\n- **SpringBoard Leak & Loop Fixes**: Fixed `YunaPanelView` notification retain cycles, eliminated `UIKeyboardDockView` notify token leaks and `layoutSubviews` loops, and excluded system daemons and non-keyboard app extensions.\n- **Clean Sileo Versioning**: Repository index now keeps only the newest package version per identifier."
+        },
         {
           "class": "DepictionHeaderView",
           "title": "Version 1.0.7"
